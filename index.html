@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2026 淡江化材研討會評分系統-安全加密版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      body {
+        background-color: #f1f5f9;
+        color: #1e293b;
+        font-family: system-ui, sans-serif;
+      }
+      .admin-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      }
+      .nav-btn {
+        color: #64748b;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+      }
+      .nav-btn.active {
+        color: #2563eb;
+        border-bottom-color: #2563eb;
+      }
+      .chip-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip-label {
+        display: inline-block;
+        padding: 6px 14px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .chip-item input:checked + .chip-label {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .chip-item.pro input:checked + .chip-label {
+        background: #dcfce7;
+        border-color: #22c55e;
+        color: #166534;
+      }
+      .chip-item.con input:checked + .chip-label {
+        background: #fee2e2;
+        border-color: #ef4444;
+        color: #991b1b;
+      }
+      input,
+      select,
+      textarea {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px;
+        width: 100%;
+      }
+      .score-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 4px;
+        display: block;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      <header
+        class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-center md:text-left">
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight">
+            2026 淡江大學化材與材料研討會
+          </h1>
+          <p
+            class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1"
+          >
+            Online Scoring System v2.8 (Security Locked)
+          </p>
+        </div>
+        <nav
+          class="flex bg-white rounded-xl shadow-sm p-1 border border-slate-200"
+        >
+          <button onclick="showView('admin')" id="nav-admin" class="nav-btn">
+            管理
+          </button>
+          <button onclick="showView('judge')" id="nav-judge" class="nav-btn">
+            評審
+          </button>
+          <button
+            onclick="showView('assistant')"
+            id="nav-assistant"
+            class="nav-btn"
+          >
+            統計
+          </button>
+        </nav>
+      </header>
+
+      <div id="view-admin" class="view-section hidden space-y-6">
+        <div class="admin-card p-6 border border-slate-200">
+          <h2 class="font-bold mb-6 text-slate-700 flex items-center gap-2">
+            <i data-lucide="settings" class="w-5 h-5"></i> 場次與評審設定
+          </h2>
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-6"
+            id="config-grid"
+          ></div>
+          <button
+            onclick="saveConfig()"
+            class="mt-8 w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition"
+          >
+            儲存系統設定 (需密碼)
+          </button>
+        </div>
+
+        <div class="admin-card p-6">
+          <h2 class="font-bold mb-4 flex items-center gap-2">
+            <i data-lucide="file-up" class="w-5 h-5"></i> 名單匯入
+          </h2>
+          <input type="file" id="excel-file" class="text-sm" />
+          <button
+            onclick="importExcel()"
+            class="bg-slate-800 text-white px-8 py-2 rounded-lg font-bold mt-4"
+          >
+            讀取並上傳至雲端
+          </button>
+        </div>
+      </div>
+
+      <div id="view-judge" class="view-section hidden">
+        <div
+          class="bg-slate-800 text-white p-6 rounded-2xl shadow-xl mb-8 flex flex-col md:flex-row gap-6"
+        >
+          <div class="flex-1">
+            <label
+              class="text-[10px] font-black opacity-60 mb-1 block uppercase tracking-widest"
+              >Select Venue</label
+            >
+            <select
+              id="judge-venue"
+              onchange="updateJudgeOptions(); loadStudentList();"
+              class="bg-slate-700 border-none text-white focus:ring-2 ring-blue-500"
+            ></select>
+          </div>
+          <div class="flex-1">
+            <label
+              class="text-[10px] font-black opacity-60 mb-1 block uppercase tracking-widest"
+              >Select Judge</label
+            >
+            <select
+              id="judge-id"
+              onchange="loadStudentList()"
+              class="bg-slate-700 border-none text-white focus:ring-2 ring-blue-500"
+            ></select>
+          </div>
+        </div>
+        <div id="student-list" class="space-y-4"></div>
+      </div>
+
+      <div id="view-assistant" class="view-section hidden space-y-6">
+        <div
+          class="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-200"
+        >
+          <h2 class="text-xl font-black text-slate-800">成績即時彙整</h2>
+          <button
+            onclick="exportFullReport()"
+            class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2"
+          >
+            <i data-lucide="download" class="w-4 h-4"></i> 匯出總表
+          </button>
+        </div>
+        <div
+          id="result-container"
+          class="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        ></div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        doc,
+        setDoc,
+        getDoc,
+        getDocs,
+        updateDoc,
+        query,
+        where,
+        deleteDoc,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBlpONrpMRHvDbXWqiAGlSvIAQsc-mCRR8",
+        authDomain: "tku-cme-2026.firebaseapp.com",
+        projectId: "tku-cme-2026",
+        storageBucket: "tku-cme-2026.firebasestorage.app",
+        messagingSenderId: "705317882780",
+        appId: "1:705317882780:web:ae6d22fe505c5628839659",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      let systemConfig = {};
+      let userSecret = ""; // 安全密鑰變數
+      const venues = ["A", "B", "C", "D"];
+
+      // 評語選項 (保持不變)
+      const commentOptions = {
+        "A.專業表現": {
+          內容與邏輯: {
+            pros: [
+              "架構完整，層次分明",
+              "邏輯嚴謹，數據具說服力",
+              "目標明確，價值敘述詳盡",
+            ],
+            cons: [
+              "重心不夠聚焦",
+              "文字冗長，應多利用圖表",
+              "方法論述不足",
+              "結論與數據關聯弱",
+            ],
+          },
+          口條與流暢: {
+            pros: ["敘事自然流暢", "自信沉穩，節奏佳", "對內容熟悉度高"],
+            cons: ["唸稿感重，欠缺互動", "語速偏快", "章節銜接生硬"],
+          },
+          答詢應變: {
+            pros: ["答詢切中要領", "邏輯應變力強", "態度謙和得體"],
+            cons: ["回覆過於簡略", "答詢與方法不一致", "反應較慢，需加強模擬"],
+          },
+        },
+        "B.技術規範": {
+          控時與儀容: {
+            pros: ["節奏掌握完美", "服儀莊重大方"],
+            cons: [
+              "報告超時",
+              "前言佔比過高",
+              "剩餘時間過多",
+              "服裝建議更正式",
+            ],
+          },
+        },
+      };
+
+      // --- 安全登入邏輯 ---
+      window.onload = () => {
+        userSecret = prompt("請輸入系統操作密碼（寫入權限）：", "");
+        if (!userSecret) {
+          alert(
+            "提醒：您目前僅有『檢視權限』。若要評分或修改設定，請重新整理頁面並輸入密碼。"
+          );
+        }
+        renderConfigInputs();
+        fetchConfig().then(() => showView("judge"));
+      };
+
+      function renderConfigInputs() {
+        const container = document.getElementById("config-grid");
+        const colors = { A: "blue", B: "indigo", C: "emerald", D: "amber" };
+        container.innerHTML = venues
+          .map(
+            (v) => `
+          <div class="bg-${colors[v]}-50/50 p-5 rounded-2xl border border-${colors[v]}-100">
+            <h3 class="font-black text-${colors[v]}-700 mb-4">場次 ${v}</h3>
+            <input type="text" id="conf-venue${v}-name" placeholder="場地名稱" class="mb-2">
+            <input type="text" id="conf-venue${v}-j1" placeholder="評審 1" class="mb-2">
+            <input type="text" id="conf-venue${v}-j2" placeholder="評審 2">
+          </div>
+        `
+          )
+          .join("");
+      }
+
+      async function fetchConfig() {
+        const snap = await getDoc(doc(db, "config", "meeting_2026"));
+        if (snap.exists()) {
+          systemConfig = snap.data();
+          venues.forEach((v) => {
+            const d = systemConfig[`venue${v}`] || {};
+            document.getElementById(`conf-venue${v}-name`).value = d.name || "";
+            document.getElementById(`conf-venue${v}-j1`).value = d.j1 || "";
+            document.getElementById(`conf-venue${v}-j2`).value = d.j2 || "";
+          });
+          document.getElementById("judge-venue").innerHTML = venues
+            .map(
+              (v) =>
+                `<option value="${v}">${
+                  systemConfig[`venue${v}`]?.name || v
+                }</option>`
+            )
+            .join("");
+          updateJudgeOptions();
+        }
+      }
+
+      window.saveConfig = async () => {
+        const cfg = { access_key: userSecret }; // 帶入密碼
+        venues.forEach((v) => {
+          cfg[`venue${v}`] = {
+            name: document.getElementById(`conf-venue${v}-name`).value,
+            j1: document.getElementById(`conf-venue${v}-j1`).value,
+            j2: document.getElementById(`conf-venue${v}-j2`).value,
+          };
+        });
+        try {
+          await setDoc(doc(db, "config", "meeting_2026"), cfg);
+          alert("系統設定已儲存");
+          location.reload();
+        } catch (e) {
+          alert("儲存失敗：密碼錯誤或權限不足。");
+        }
+      };
+
+      window.importExcel = function () {
+        const file = document.getElementById("excel-file").files[0];
+        if (!file) return alert("請先選擇檔案");
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const wb = XLSX.read(new Uint8Array(e.target.result), {
+            type: "array",
+          });
+          const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+          let count = 0;
+          for (const row of data) {
+            try {
+              await setDoc(doc(db, "students", String(row["學號"])), {
+                access_key: userSecret, // 帶入密碼
+                sid: String(row["學號"]),
+                name: row["姓名"],
+                title: row["論文題目"],
+                advisor: row["指導老師"],
+                venue: row["場地"],
+                j1_a: 0,
+                j1_b: 0,
+                j1_comm: "",
+                j1_total: 0,
+                j2_a: 0,
+                j2_b: 0,
+                j2_comm: "",
+                j2_total: 0,
+              });
+              count++;
+            } catch (err) {
+              return alert("匯入中斷：密碼錯誤。");
+            }
+          }
+          alert(`成功匯入 ${count} 筆學生資料`);
+          location.reload();
+        };
+        reader.readAsArrayBuffer(file);
+      };
+
+      window.submitDetailedScore = async (sid) => {
+        const a = parseFloat(document.getElementById(`a-${sid}`).value) || 0;
+        const b = parseFloat(document.getElementById(`b-${sid}`).value) || 0;
+        const jType = document.getElementById("judge-id").value;
+        const checkedBoxes = document.querySelectorAll(
+          `.comm-check-${sid}:checked`
+        );
+        let finalComm = Array.from(checkedBoxes)
+          .map((cb) => cb.value)
+          .join("\n");
+        const manualText = document
+          .getElementById(`c-text-${sid}`)
+          .value.trim();
+        if (manualText) finalComm += (finalComm ? "\n" : "") + manualText;
+        const total = Math.round(a * 0.7 + b * 0.3);
+
+        const updates = { access_key: userSecret }; // 帶入密碼
+        updates[`${jType}_a`] = a;
+        updates[`${jType}_b`] = b;
+        updates[`${jType}_comm`] = finalComm;
+        updates[`${jType}_total`] = total;
+
+        try {
+          await updateDoc(doc(db, "students", sid), updates);
+          document.getElementById(`done-${sid}`).classList.remove("hidden");
+          console.log(`${sid} saved`);
+        } catch (e) {
+          alert("無法儲存！請確認密碼是否正確。");
+        }
+      };
+
+      // --- 介面控制邏輯 ---
+      window.updateJudgeOptions = () => {
+        const v = document.getElementById("judge-venue").value;
+        const d = systemConfig[`venue${v}`] || { j1: "未設定", j2: "未設定" };
+        document.getElementById(
+          "judge-id"
+        ).innerHTML = `<option value="j1">委員：${d.j1}</option><option value="j2">委員：${d.j2}</option>`;
+      };
+
+      window.loadStudentList = async () => {
+        const venue = document.getElementById("judge-venue").value;
+        const jType = document.getElementById("judge-id").value;
+        const container = document.getElementById("student-list");
+        container.innerHTML =
+          "<p class='text-center py-10 opacity-50 text-sm'>正在從雲端讀取名單...</p>";
+
+        const q = query(
+          collection(db, "students"),
+          where("venue", "==", venue)
+        );
+        const snap = await getDocs(q);
+        container.innerHTML = "";
+
+        if (snap.empty) {
+          container.innerHTML =
+            "<p class='text-center py-10 text-slate-400'>此場地目前無學生資料。</p>";
+          return;
+        }
+
+        snap.forEach((d) => {
+          const s = d.data();
+          const currentComm = s[`${jType}_comm`] || "";
+          let chipHtml = "";
+          for (const [cat, sub] of Object.entries(commentOptions)) {
+            chipHtml += `<div class="mb-4"><h4 class="text-xs font-black text-slate-400 mb-2 uppercase">${cat}</h4>`;
+            for (const [title, options] of Object.entries(sub)) {
+              chipHtml += `<p class="text-[10px] font-bold text-slate-500 mb-1">● ${title}</p><div class="chip-container mb-3">`;
+              options.pros.forEach(
+                (p) =>
+                  (chipHtml += `<label class="chip-item pro"><input type="checkbox" class="comm-check-${
+                    s.sid
+                  } hidden" value="${p}" ${
+                    currentComm.includes(p) ? "checked" : ""
+                  }> <span class="chip-label text-xs">${p}</span></label>`)
+              );
+              options.cons.forEach(
+                (c) =>
+                  (chipHtml += `<label class="chip-item con"><input type="checkbox" class="comm-check-${
+                    s.sid
+                  } hidden" value="${c}" ${
+                    currentComm.includes(c) ? "checked" : ""
+                  }> <span class="chip-label text-xs">${c}</span></label>`)
+              );
+              chipHtml += `</div>`;
+            }
+            chipHtml += `</div>`;
+          }
+
+          const div = document.createElement("div");
+          div.className =
+            "bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4";
+          div.innerHTML = `
+            <div class="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-lg font-black">${
+                    s.name
+                  }</h3><span class="text-xs text-slate-400">#${s.sid}</span>
+                  <div id="done-${s.sid}" class="${
+            s[`${jType}_total`] > 0 ? "" : "hidden"
+          } text-green-500"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                </div>
+                <p class="text-xs text-slate-500">${s.advisor} | ${s.title}</p>
+              </div>
+              <div class="flex gap-2">
+                <div class="w-24"><label class="score-label">專業(70%)</label><input type="number" id="a-${
+                  s.sid
+                }" value="${
+            s[`${jType}_a`] || ""
+          }" class="font-bold text-blue-600"></div>
+                <div class="w-24"><label class="score-label">技術(30%)</label><input type="number" id="b-${
+                  s.sid
+                }" value="${
+            s[`${jType}_b`] || ""
+          }" class="font-bold text-indigo-600"></div>
+                <div class="flex items-end"><button onclick="submitDetailedScore('${
+                  s.sid
+                }')" class="bg-blue-600 text-white h-[42px] px-4 rounded-lg font-bold">儲存</button></div>
+              </div>
+            </div>
+            <details class="group border-t border-slate-100">
+              <summary class="flex justify-between items-center px-5 py-3 bg-slate-50/50 cursor-pointer">
+                <span class="text-xs font-bold text-slate-500">詳細評語與建議</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+              </summary>
+              <div class="p-5 bg-white">
+                ${chipHtml}
+                <textarea id="c-text-${
+                  s.sid
+                }" rows="2" class="text-sm mt-4" placeholder="其他建議...">${extractManualText(
+            currentComm
+          )}</textarea>
+                <button onclick="submitDetailedScore('${
+                  s.sid
+                }')" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-4">儲存評語</button>
+              </div>
+            </details>
+          `;
+          container.appendChild(div);
+        });
+        lucide.createIcons();
+      };
+
+      function extractManualText(fullText) {
+        if (!fullText) return "";
+        let text = fullText;
+        Object.values(commentOptions).forEach((cat) => {
+          Object.values(cat).forEach((opt) => {
+            [...opt.pros, ...opt.cons].forEach(
+              (p) => (text = text.replace(p, ""))
+            );
+          });
+        });
+        return text.trim();
+      }
+
+      window.loadResults = async () => {
+        const container = document.getElementById("result-container");
+        container.innerHTML = "<p class='opacity-50'>彙整中...</p>";
+        const snap = await getDocs(collection(db, "students"));
+        const list = [];
+        snap.forEach((d) => list.push(d.data()));
+        container.innerHTML = venues
+          .map((v) => {
+            const sorted = list
+              .filter((s) => s.venue === v)
+              .map((s) => ({
+                ...s,
+                avg: (((s.j1_total || 0) + (s.j2_total || 0)) / 2).toFixed(1),
+              }))
+              .sort((a, b) => b.avg - a.avg);
+            return `<div class="admin-card p-6">
+            <h2 class="font-black mb-4 border-b pb-2 text-slate-700">${
+              systemConfig[`venue${v}`]?.name || "場次 " + v
+            }</h2>
+            ${sorted
+              .map(
+                (s, i) =>
+                  `<div class="flex justify-between py-2 text-sm border-b border-slate-50"><span>${
+                    i + 1
+                  }. ${s.name}</span><span class="font-bold text-blue-600">${
+                    s.avg
+                  }</span></div>`
+              )
+              .join("")}
+          </div>`;
+          })
+          .join("");
+      };
+
+      window.exportFullReport = async () => {
+        const snap = await getDocs(collection(db, "students"));
+        const data = [];
+        snap.forEach((d) => {
+          const s = d.data();
+          data.push({
+            學號: s.sid,
+            姓名: s.name,
+            場地: s.venue,
+            評審1: s.j1_total,
+            評審2: s.j2_total,
+            平均: ((s.j1_total + s.j2_total) / 2).toFixed(1),
+            評語1: s.j1_comm,
+            評語2: s.j2_comm,
+          });
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "成績");
+        XLSX.writeFile(wb, "2026化材研討會總表.xlsx");
+      };
+
+      window.showView = (v) => {
+        document
+          .querySelectorAll(".view-section")
+          .forEach((e) => e.classList.add("hidden"));
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("view-" + v).classList.remove("hidden");
+        document.getElementById("nav-" + v).classList.add("active");
+        if (v === "judge") loadStudentList();
+        if (v === "assistant") loadResults();
+      };
+    </script>
+  </body>
+</html>
