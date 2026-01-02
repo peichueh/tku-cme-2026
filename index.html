@@ -126,7 +126,7 @@
     <main class="container mx-auto p-4 max-w-6xl">
       <section id="publicResults" class="hidden space-y-6">
         <h2 class="text-3xl font-black text-center text-blue-900 my-8 italic">
-          各場地即時成績看板
+          各場地即時成績看板 (自動更新)
         </h2>
         <div
           id="publicRankContainer"
@@ -912,12 +912,15 @@
         alert("儲存成功");
       }
 
+      // 多欄位即時排行榜邏輯
       function renderPublicResults() {
-        document.getElementById("publicRankContainer").innerHTML = venues
+        const container = document.getElementById("publicRankContainer");
+        container.innerHTML = venues
           .map((v) => {
-            const room = venueConfig[v]?.room || "未定",
-              judges = venueConfig[v]?.judges || ["J1", "J2"];
+            const room = venueConfig[v]?.room || "未設定";
+            const judges = venueConfig[v]?.judges || ["評審1", "評審2"];
             const vScores = scores.filter((s) => s.venue === v);
+
             const grouped = {};
             vScores.forEach((s) => {
               if (!grouped[s.studentId])
@@ -925,6 +928,7 @@
                   name: s.studentName,
                   j1: "--",
                   j2: "--",
+                  avg: 0,
                   sum: 0,
                   count: 0,
                 };
@@ -932,50 +936,96 @@
               else if (s.judge === judges[1]) grouped[s.studentId].j2 = s.total;
               grouped[s.studentId].sum += s.total;
               grouped[s.studentId].count++;
+              grouped[s.studentId].avg = Math.round(
+                grouped[s.studentId].sum / grouped[s.studentId].count
+              );
             });
-            const rank = Object.values(grouped).sort(
-              (a, b) => b.sum / b.count - a.sum / a.count
-            );
-            return `<div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900"><h3 class="font-bold mb-4">${v} 場地 (${room})</h3>
-            <div class="space-y-2 text-sm">${
-              rank
-                .map(
-                  (r, i) =>
-                    `<div class="flex justify-between p-2 ${
-                      i == 0 ? "bg-yellow-50 font-bold" : ""
-                    }"><span>${i + 1}. ${r.name}</span><span>${Math.round(
-                      r.sum / r.count
-                    )}分</span></div>`
-                )
-                .join("") || "等待評分..."
-            }</div></div>`;
+            const rank = Object.values(grouped).sort((a, b) => b.avg - a.avg);
+
+            return `
+            <div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900">
+              <h3 class="font-black text-xl mb-4 border-b pb-2 flex justify-between">
+                <span>${v} 場地 (${room})</span>
+                <span class="text-xs text-blue-500 animate-pulse">Live</span>
+              </h3>
+              <div class="space-y-3">
+                <div class="grid grid-cols-5 text-[10px] text-slate-400 font-bold px-2">
+                  <div class="col-span-2">學生姓名</div>
+                  <div class="text-center">評審1</div>
+                  <div class="text-center">評審2</div>
+                  <div class="text-right">平均</div>
+                </div>
+                ${
+                  rank.length
+                    ? rank
+                        .map(
+                          (r, i) => `
+                  <div class="grid grid-cols-5 items-center text-sm p-2 ${
+                    i === 0 ? "bg-yellow-50 rounded-lg" : ""
+                  }">
+                    <div class="col-span-2 font-bold text-slate-700">${
+                      i + 1
+                    }. ${r.name}</div>
+                    <div class="text-center font-mono text-xs text-slate-400">${
+                      r.j1
+                    }</div>
+                    <div class="text-center font-mono text-xs text-slate-400">${
+                      r.j2
+                    }</div>
+                    <div class="text-right font-black ${
+                      i === 0 ? "text-blue-700" : "text-slate-600"
+                    }">${r.avg}</div>
+                  </div>`
+                        )
+                        .join("")
+                    : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
+                }
+              </div>
+            </div>`;
           })
           .join("");
       }
 
-      function renderStudentList() {
-        const container = document.getElementById("studentListContainer");
-        const filtered = students.filter((s) => s.venue === currentUser.venue);
-        container.innerHTML = filtered
-          .map((s) => {
-            const isDone = scores.some(
-              (sc) => sc.studentId === s.id && sc.judge === currentUser.name
-            );
-            return `<div onclick="openScoring('${
-              s.id
-            }')" class="flex justify-between p-4 border-b hover:bg-slate-50 cursor-pointer">
-            <div><p class="text-[10px] text-slate-400 font-mono">${
-              s.id
-            }</p><h3 class="font-bold">${s.name}</h3></div>
-            ${
-              isDone
-                ? '<span class="checkmark">✔ 已完成</span>'
-                : '<span class="text-xs text-slate-300">尚未評分</span>'
-            }
+
+// 開啟學生查詢頁面
+async function fetchStudentResult() {
+  const sid = document.getElementById("querySid").value.trim();
+  if (!sid) return alert("請輸入學號");
+
+  toggleLoading(true);
+  try {
+    // 從 Scores 集合中抓取該學號的所有評分資料
+    const snap = await db.collection("Scores").where("studentId", "==", sid).get();
+    
+    if (snap.empty) {
+      alert("尚未有評分紀錄，請確認學號是否正確或稍後再試。");
+      document.getElementById("queryResult").classList.add("hidden");
+    } else {
+      let totalSum = 0;
+      let html = "";
+      
+      snap.forEach(doc => {
+        const d = doc.data();
+        totalSum += d.total;
+        html += `
+          <div class="p-4 bg-white border rounded-xl shadow-sm text-sm">
+            <p class="font-bold text-blue-900 border-b pb-1 mb-2">評審建議：</p>
+            <p class="whitespace-pre-line text-slate-600 italic">${d.feedback_json.summary || "無具體評語"}</p>
           </div>`;
-          })
-          .join("");
-      }
+      });
+
+      document.getElementById("resAvg").innerText = Math.round(totalSum / snap.size);
+      document.getElementById("resDetails").innerHTML = html;
+      document.getElementById("queryResult").classList.remove("hidden");
+    }
+  } catch (e) {
+    alert("查詢出錯");
+  } finally {
+    toggleLoading(false);
+  }
+}
+
+
 
       function renderAdminList() {
         const table = document.getElementById("adminStudentTable");
