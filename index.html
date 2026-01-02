@@ -1052,15 +1052,55 @@ async function fetchStudentResult() {
 
 
       function renderAdminList() {
-        const table = document.getElementById("adminStudentTable");
-        const header = `<thead class="hidden md:table-header-group bg-slate-100 font-bold"><tr><td class="p-3 border">學號</td><td class="p-3 border">姓名</td><td class="p-3 border">場地</td></tr></thead>`;
-        const rows = students
-          .map(
-            (s) =>
-              `<tr class="block md:table-row border-b p-4 md:p-0"><td class="block md:table-cell p-1 md:p-3">${s.id}</td><td class="block md:table-cell p-1 md:p-3 font-bold">${s.name}</td><td class="block md:table-cell p-1 md:p-3">${s.venue}</td></tr>`
-          )
-          .join("");
-        table.innerHTML = header + `<tbody>${rows}</tbody>`;
+        const tableBody = document.getElementById("adminStudentTable");
+
+        // 1. 表頭：在手機端隱藏 (hidden)，中視窗以上顯示 (md:table-header-group)
+        const header = `
+          <thead class="hidden md:table-header-group bg-slate-100 font-bold">
+            <tr>
+              <td class="p-3 border">學號 (ID)</td>
+              <td class="p-3 border">姓名</td>
+              <td class="p-3 border">指導教授</td>
+              <td class="p-3 border">論文題目</td>
+              <td class="p-3 border text-center">場地</td>
+            </tr>
+          </thead>`;
+
+        // 2. 資料列：手機端轉為卡片 (block + shadow)，中視窗以上恢復為表格列 (md:table-row)
+        const rows = students.map((s) => `
+          <tr class="block md:table-row mb-4 md:mb-0 bg-white border md:border-b shadow-sm md:shadow-none rounded-xl md:rounded-none p-4 md:p-0">
+      
+            <td data-label="學號" class="block md:table-cell p-1 md:p-3 text-xs font-mono text-slate-500 md:text-slate-900 
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.id}
+            </td>
+      
+            <td data-label="姓名" class="block md:table-cell p-1 md:p-3 font-bold text-lg md:text-base
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.name}
+            </td>
+      
+            <td data-label="指導教授" class="block md:table-cell p-1 md:p-3 text-sm
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.advisor || "--"}
+            </td>
+      
+            <td data-label="論文題目" class="block md:table-cell p-1 md:p-3 text-xs text-slate-600
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.title || "--"}
+            </td>
+      
+            <td data-label="場地" class="block md:table-cell p-1 md:p-3 text-left md:text-center
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold inline-block mt-1 md:mt-0">
+                ${s.venue}
+              </span>
+            </td>
+      
+          </tr>
+        `).join("");
+
+        tableBody.innerHTML = header + `<tbody class="block md:table-row-group">${rows}</tbody>`;
       }
 
       async function handleExcelImport(input) {
