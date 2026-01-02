@@ -16,10 +16,9 @@
       }
       .dimension-card {
         border-left: 4px solid #3b82f6;
-        padding-left: 1rem;
+        padding: 1rem;
         margin-bottom: 1.5rem;
         background: #fff;
-        padding: 1rem;
         border-radius: 0.75rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
@@ -102,12 +101,12 @@
           >
             即時排行榜
           </button>
-
-          <button onclick="showSection('studentQuery')" class="text-xs bg-orange-600 px-4 py-2 rounded-full">
+          <button
+            onclick="showSection('studentQuery')"
+            class="text-xs bg-orange-600 px-4 py-2 rounded-full"
+          >
             學生查分
           </button>
-
-
           <button
             onclick="showSection('loginSection')"
             class="text-xs bg-blue-700 px-4 py-2 rounded-full"
@@ -127,7 +126,7 @@
     <main class="container mx-auto p-4 max-w-6xl">
       <section id="publicResults" class="hidden space-y-6">
         <h2 class="text-3xl font-black text-center text-blue-900 my-8 italic">
-          各場地即時成績看板 (自動更新)
+          各場地即時成績看板
         </h2>
         <div
           id="publicRankContainer"
@@ -135,53 +134,57 @@
         ></div>
       </section>
 
-<section id="studentQuery" class="hidden max-w-md mx-auto bg-white p-10 mt-12 rounded-3xl shadow-2xl border">
-  <h2 class="text-2xl font-black mb-6 text-center text-slate-800">成績與評語查詢</h2>
-  <div class="space-y-4">
-    <input type="text" id="querySid" class="w-full p-3 border-2 rounded-xl outline-none focus:border-orange-500" placeholder="請輸入學號 (如: 410...)">
-    <button onclick="fetchStudentResult()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg">搜尋我的紀錄</button>
-  </div>
-  
-  <div id="queryResult" class="mt-8 hidden space-y-4">
-    <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100">
-      <p class="text-xs text-orange-800 font-bold">總平均分數</p>
-      <p id="resAvg" class="text-5xl font-black text-orange-600">--</p>
-    </div>
-    <div id="resDetails" class="space-y-3">
-      </div>
-  </div>
-</section>
-
+      <section
+        id="studentQuery"
+        class="hidden max-w-md mx-auto bg-white p-10 mt-12 rounded-3xl shadow-2xl border"
+      >
+        <h2 class="text-2xl font-black mb-6 text-center text-slate-800">
+          成績與評語查詢
+        </h2>
+        <div class="space-y-4">
+          <input
+            type="text"
+            id="querySid"
+            class="w-full p-3 border-2 rounded-xl outline-none focus:border-orange-500"
+            placeholder="請輸入學號"
+          />
+          <button
+            onclick="fetchStudentResult()"
+            class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg"
+          >
+            查詢
+          </button>
+        </div>
+        <div id="queryResult" class="mt-8 hidden space-y-4">
+          <div
+            class="p-4 bg-orange-50 rounded-2xl border border-orange-100 text-center"
+          >
+            <p class="text-xs text-orange-800 font-bold">總平均分數</p>
+            <p id="resAvg" class="text-5xl font-black text-orange-600">--</p>
+          </div>
+          <div id="resDetails" class="space-y-3"></div>
+        </div>
+      </section>
 
       <section
         id="loginSection"
         class="hidden max-w-md mx-auto bg-white p-10 mt-12 rounded-3xl shadow-2xl border"
       >
         <h2 class="text-2xl font-black mb-8 text-center text-slate-800">
-          評審登入
+          評審登入(請輸入人員代號)
         </h2>
         <div class="space-y-6">
-          <select
-            id="jVenue"
-            class="w-full p-3 border-2 rounded-xl bg-slate-50 outline-none focus:border-blue-500"
-          ></select>
-          <input
-            type="text"
-            id="jName"
-            class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500"
-            placeholder="請輸入評審姓名"
-          />
           <input
             type="password"
             id="jPassword"
-            class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500"
-            placeholder="請輸入評審密碼(預設人員代號)"
+            class="w-full p-4 border-2 rounded-2xl outline-none focus:border-blue-600 text-center text-2xl tracking-widest"
+            placeholder="請輸入人員代號"
           />
           <button
             onclick="judgeLogin()"
-            class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg"
+            class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition"
           >
-            進入評分清單
+            進入評分清單系統
           </button>
         </div>
       </section>
@@ -227,9 +230,11 @@
         <div class="mb-8 border-b pb-4 flex justify-between items-end">
           <div>
             <h2 id="scoringName" class="text-3xl font-black text-slate-800">
-              評分對象
+              姓名
             </h2>
-            <p id="scoringTitle" class="text-slate-500 text-sm mt-1 italic"></p>
+            <p id="scoringTitle" class="text-slate-500 text-sm mt-1 italic">
+              題目
+            </p>
           </div>
           <p id="scoringAdvisor" class="text-blue-700 text-xs font-bold"></p>
         </div>
@@ -237,169 +242,177 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div class="space-y-4">
             <h3 class="font-bold text-blue-700 border-b pb-2">
-              A. 專業性評分 (70%)
+              A. 專業評語 (70%)
             </h3>
             <div class="dimension-card">
               <label class="block text-xs font-bold text-slate-500 mb-1"
-                >報告內容 (1-5)</label
+                >報告內容建議</label
               >
-              <div class="flex gap-2">
-                <select
-                  id="v_content"
-                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
-                >
-                  <option value="5">5</option>
-                  <option value="4">4</option>
-                  <option value="3" selected>3</option>
-                  <option value="2">2</option>
-                  <option value="1">1</option>
-                </select>
-                <input
-                  type="text"
-                  id="r_content"
-                  oninput="syncToOverall()"
-                  placeholder="[本項評語]可輸入文字,自動彙整中..."
-                  class="flex-1 text-xs border-b outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                id="r_content"
+                oninput="syncToOverall()"
+                class="w-full text-xs border-b outline-none p-1"
+                placeholder="輸入或點選下方按鈕..."
+              />
               <div class="flex flex-wrap mt-2">
                 <button
-                  onclick="appendReason('r_content','架構嚴謹')"
+                  onclick="appendReason('r_content','架構完整，論述層次分明，展現高度專業。')"
                   class="btn-pos"
                 >
-                  架構嚴謹
+                  架構完整，論述層次分明，展現高度專業。
                 </button>
                 <button
-                  onclick="appendReason('r_content','目標明確')"
+                  onclick="appendReason('r_content','邏輯推論嚴謹，研究數據具備說服力。')"
                   class="btn-pos"
                 >
-                  目標明確
+                  邏輯推論嚴謹，研究數據具備說服力。
                 </button>
                 <button
-                  onclick="appendReason('r_content','內容空泛')"
-                  class="btn-neg"
+                  onclick="appendReason('r_content','研究目標明確，核心價值敘述詳盡。')"
+                  class="btn-pos"
                 >
-                  內容空泛
+                  研究目標明確，核心價值敘述詳盡。
                 </button>
                 <button
-                  onclick="appendReason('r_content','數據混亂')"
+                  onclick="appendReason('r_content','文獻引述精確，能有效支撐個人論點。')"
+                  class="btn-pos"
+                >
+                  文獻引述精確，能有效支撐個人論點。
+                </button>
+
+                <button
+                  onclick="appendReason('r_content','內容重心不夠聚焦，建議重新梳理研究動機。')"
                   class="btn-neg"
                 >
-                  數據混亂
+                  內容重心不夠聚焦，建議重新梳理研究動機。
+                </button>
+                <button
+                  onclick="appendReason('r_content','投影片文字過於冗長，應多利用圖表呈現關鍵數據。')"
+                  class="btn-neg"
+                >
+                  投影片文字過於冗長，應多利用圖表呈現關鍵數據。
+                </button>
+                <button
+                  onclick="appendReason('r_content','部分科學方法論述不足，建議加強實驗細節之說明。')"
+                  class="btn-neg"
+                >
+                  部分科學方法論述不足，建議加強實驗細節之說明。
+                </button>
+                <button
+                  onclick="appendReason('r_content','結論與數據關聯性稍弱，建議強化論證過程。')"
+                  class="btn-neg"
+                >
+                  結論與數據關聯性稍弱，建議強化論證過程。
                 </button>
               </div>
             </div>
-
             <div class="dimension-card">
               <label class="block text-xs font-bold text-slate-500 mb-1"
-                >報告流暢度 (1-5)</label
+                >表達流暢度建議</label
               >
-              <div class="flex gap-2">
-                <select
-                  id="v_fluency"
-                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
-                >
-                  <option value="5">5</option>
-                  <option value="4">4</option>
-                  <option value="3" selected>3</option>
-                  <option value="2">2</option>
-                  <option value="1">1</option>
-                </select>
-                <input
-                  type="text"
-                  id="r_fluency"
-                  oninput="syncToOverall()"
-                  placeholder="[本項評語]可輸入文字,自動彙整中..."
-                  class="flex-1 text-xs border-b outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                id="r_fluency"
+                oninput="syncToOverall()"
+                class="w-full text-xs border-b outline-none p-1"
+              />
               <div class="flex flex-wrap mt-2">
                 <button
-                  onclick="appendReason('r_fluency','台風穩健')"
+                  onclick="appendReason('r_fluency','口齒清晰、敘事自然流暢，極具感染力。')"
                   class="btn-pos"
                 >
-                  台風穩健
+                  口齒清晰、敘事自然流暢，極具感染力。
                 </button>
                 <button
-                  onclick="appendReason('r_fluency','表達流利')"
+                  onclick="appendReason('r_fluency','表現自信沉穩，能帶領聽眾掌握演講節奏。')"
                   class="btn-pos"
                 >
-                  表達流利
+                  表現自信沉穩，能帶領聽眾掌握演講節奏。
                 </button>
                 <button
-                  onclick="appendReason('r_fluency','過度唸稿')"
-                  class="btn-neg"
+                  onclick="appendReason('r_fluency','對內容極度熟稔，展現優異的專業素養。')"
+                  class="btn-pos"
                 >
-                  過度唸稿
+                  對內容極度熟稔，展現優異的專業素養。
                 </button>
                 <button
-                  onclick="appendReason('r_fluency','語速過快')"
+                  onclick="appendReason('r_fluency','唸稿感較重，建議增加與觀眾的眼神互動。')"
                   class="btn-neg"
                 >
-                  語速過快
+                  唸稿感較重，建議增加與觀眾的眼神互動。
+                </button>
+                <button
+                  onclick="appendReason('r_fluency','說話語速偏快，建議適時停頓以利聽眾吸收。')"
+                  class="btn-neg"
+                >
+                  說話語速偏快，建議適時停頓以利聽眾吸收。
+                </button>
+                <button
+                  onclick="appendReason('r_fluency','表達稍顯生硬，建議加強各章節間的語意銜接。')"
+                  class="btn-neg"
+                >
+                  表達稍顯生硬，建議加強各章節間的語意銜接。
                 </button>
               </div>
             </div>
-
             <div class="dimension-card">
               <label class="block text-xs font-bold text-slate-500 mb-1"
-                >提問應答 (1-5)</label
+                >提問詮釋建議</label
               >
-              <div class="flex gap-2">
-                <select
-                  id="v_qa"
-                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
-                >
-                  <option value="5">5</option>
-                  <option value="4">4</option>
-                  <option value="3" selected>3</option>
-                  <option value="2">2</option>
-                  <option value="1">1</option>
-                </select>
-                <input
-                  type="text"
-                  id="r_qa"
-                  oninput="syncToOverall()"
-                  placeholder="[本項評語]可輸入文字,自動彙整中..."
-                  class="flex-1 text-xs border-b outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                id="r_qa"
+                oninput="syncToOverall()"
+                class="w-full text-xs border-b outline-none p-1"
+              />
               <div class="flex flex-wrap mt-2">
                 <button
-                  onclick="appendReason('r_qa','切中要領')"
+                  onclick="appendReason('r_qa','答詢切中要領，對研究細節掌握度極高。')"
                   class="btn-pos"
                 >
-                  切中要領
+                  答詢切中要領，對研究細節掌握度極高。
                 </button>
                 <button
-                  onclick="appendReason('r_qa','邏輯嚴密')"
+                  onclick="appendReason('r_qa','邏輯應變力強，能針對質疑給予科學性回覆。')"
                   class="btn-pos"
                 >
-                  邏輯嚴密
+                  邏輯應變力強，能針對質疑給予科學性回覆。
                 </button>
                 <button
-                  onclick="appendReason('r_qa','回覆模糊')"
-                  class="btn-neg"
+                  onclick="appendReason('r_qa','態度謙和得體，能正面積極與委員討論。')"
+                  class="btn-pos"
                 >
-                  回覆模糊
+                  態度謙和得體，能正面積極與委員討論。
                 </button>
                 <button
-                  onclick="appendReason('r_qa','概念錯誤')"
+                  onclick="appendReason('r_qa','回覆過於簡略，建議對問題核心進行深度論述。')"
                   class="btn-neg"
                 >
-                  概念錯誤
+                  回覆過於簡略，建議對問題核心進行深度論述。
+                </button>
+                <button
+                  onclick="appendReason('r_qa','答詢內容與研究方法未盡一致，應重新釐清觀念。')"
+                  class="btn-neg"
+                >
+                  答詢內容與研究方法未盡一致，應重新釐清觀念。
+                </button>
+                <button
+                  onclick="appendReason('r_qa','面對提問反應較慢，建議加強模擬訓練以提升應變。')"
+                  class="btn-neg"
+                >
+                  面對提問反應較慢，建議加強模擬訓練以提升應變。
                 </button>
               </div>
             </div>
-
-            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <div class="bg-blue-50 p-4 rounded-xl border">
               <label class="block text-xs font-bold text-blue-800 mb-1"
                 >專業原始分 (0-100)</label
               >
               <input
                 type="number"
                 id="profRaw"
-                class="w-full p-2 text-2xl font-black rounded-lg border-2 outline-none focus:border-blue-500"
+                class="w-full p-2 text-2xl font-black rounded-lg border-2 outline-none"
                 oninput="calcTotal()"
               />
             </div>
@@ -407,105 +420,106 @@
 
           <div class="space-y-4">
             <h3 class="font-bold text-green-700 border-b pb-2">
-              B. 技術性評分 (30%)
+              B. 技術評語 (30%)
             </h3>
             <div class="dimension-card" style="border-left-color: #22c55e">
               <label class="block text-xs font-bold text-slate-500 mb-1"
-                >時間掌控 (1-5)</label
+                >時間掌控建議</label
               >
-              <div class="flex gap-2">
-                <select
-                  id="v_time"
-                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
-                >
-                  <option value="5">5</option>
-                  <option value="4">4</option>
-                  <option value="3" selected>3</option>
-                  <option value="2">2</option>
-                  <option value="1">1</option>
-                </select>
-                <input
-                  type="text"
-                  id="r_time"
-                  oninput="syncToOverall()"
-                  placeholder="[本項評語]可輸入文字,自動彙整中..."
-                  class="flex-1 text-xs border-b outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                id="r_time"
+                oninput="syncToOverall()"
+                class="w-full text-xs border-b outline-none p-1"
+              />
               <div class="flex flex-wrap mt-2">
                 <button
-                  onclick="appendReason('r_time','掌握精準')"
+                  onclick="appendReason('r_time','發表節奏掌握完美，精確完成報告。')"
                   class="btn-pos"
                 >
-                  掌握精準
+                  發表節奏掌握完美，精確完成報告。
                 </button>
                 <button
-                  onclick="appendReason('r_time','報告超時')"
+                  onclick="appendReason('r_time','內容分配均衡，在時限內完整呈現研究精華。')"
+                  class="btn-pos"
+                >
+                  內容分配均衡，在時限內完整呈現研究精華。
+                </button>
+                <button
+                  onclick="appendReason('r_time','發表超時，建議重新精簡簡報頁數與論述重點。')"
                   class="btn-neg"
                 >
-                  報告超時
+                  發表超時，建議重新精簡簡報頁數與論述重點。
+                </button>
+                <button
+                  onclick="appendReason('r_time','前言佔比過高，導致後段核心成果描述太匆促。')"
+                  class="btn-neg"
+                >
+                  前言佔比過高，導致後段核心成果描述太匆促。
+                </button>
+                <button
+                  onclick="appendReason('r_time','剩餘時間過多，建議增加對研究成果的深度解說。')"
+                  class="btn-neg"
+                >
+                  剩餘時間過多，建議增加對研究成果的深度解說。
                 </button>
               </div>
             </div>
-
             <div class="dimension-card" style="border-left-color: #22c55e">
               <label class="block text-xs font-bold text-slate-500 mb-1"
-                >服儀儀態 (1-5)</label
+                >服儀儀態建議</label
               >
-              <div class="flex gap-2">
-                <select
-                  id="v_outfit"
-                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
-                >
-                  <option value="5">5</option>
-                  <option value="4">4</option>
-                  <option value="3" selected>3</option>
-                  <option value="2">2</option>
-                  <option value="1">1</option>
-                </select>
-                <input
-                  type="text"
-                  id="r_outfit"
-                  oninput="syncToOverall()"
-                  placeholder="[本項評語]可輸入文字,自動彙整中..."
-                  class="flex-1 text-xs border-b outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                id="r_outfit"
+                oninput="syncToOverall()"
+                class="w-full text-xs border-b outline-none p-1"
+              />
               <div class="flex flex-wrap mt-2">
                 <button
-                  onclick="appendReason('r_outfit','專業莊重')"
+                  onclick="appendReason('r_outfit','服儀莊重得體，展現優良的專業形象。')"
                   class="btn-pos"
                 >
-                  專業莊重
+                  服儀莊重得體，展現優良的專業形象。
                 </button>
                 <button
-                  onclick="appendReason('r_outfit','建議正式')"
+                  onclick="appendReason('r_outfit','舉止端莊大方，符合學術場合禮儀。')"
+                  class="btn-pos"
+                >
+                  舉止端莊大方，符合學術場合禮儀。
+                </button>
+                <button
+                  onclick="appendReason('r_outfit','服裝建議可以更為正式，以增進整體專業感。')"
                   class="btn-neg"
                 >
-                  建議正式
+                  服裝建議可以更為正式，以增進整體專業感。
+                </button>
+                <button
+                  onclick="appendReason('r_outfit','表情與肢體儀態略顯緊張，可透過多加練習提升自然度。')"
+                  class="btn-neg"
+                >
+                  表情與肢體儀態略顯緊張，可透過多加練習提升自然度。
                 </button>
               </div>
             </div>
-
-            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+            <div class="bg-green-50 p-4 rounded-xl border">
               <label class="block text-xs font-bold text-green-800 mb-1"
                 >技術原始分 (0-100)</label
               >
               <input
                 type="number"
                 id="techRaw"
-                class="w-full p-2 text-2xl font-black rounded-lg border-2 outline-none focus:border-green-500"
+                class="w-full p-2 text-2xl font-black rounded-lg border-2 outline-none"
                 oninput="calcTotal()"
               />
             </div>
-
-            <div class="p-4 bg-slate-100 rounded-xl border mt-8">
+            <div class="p-4 bg-slate-100 rounded-xl border mt-4">
               <label class="block text-sm font-bold text-blue-900 mb-2"
-                >● 委員總結建議 (自動彙整)：</label
+                >● 委員總結建議：</label
               >
               <textarea
                 id="judgeComment"
-                class="w-full p-3 text-sm border-2 rounded-xl h-40 outline-none focus:border-blue-500 shadow-inner leading-relaxed"
+                class="w-full p-3 text-sm border-2 rounded-xl h-40 outline-none"
                 placeholder="彙整中..."
               ></textarea>
             </div>
@@ -513,28 +527,29 @@
         </div>
 
         <div
-          class="mt-8 flex justify-between items-center bg-slate-900 text-white p-8 rounded-3xl shadow-2xl"
+          class="mt-8 flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-8 rounded-3xl gap-4"
         >
           <div>
-            加權總成績：<span
+            加權成績：<span
               id="finalScoreDisplay"
               class="text-6xl font-black text-yellow-400"
               >0</span
             >分
           </div>
-          <button
-                onclick="deleteGradingFromCloud()"
-                class="bg-red-600 px-8 py-4 rounded-2xl font-bold text-xl hover:bg-red-700 transition shadow-lg"
-              >
-                刪除紀錄
-              </button>
-
-          <button
-            onclick="submitGradingToCloud()"
-            class="bg-blue-600 px-16 py-4 rounded-2xl font-black text-2xl hover:bg-white hover:text-blue-900 transition shadow-xl"
-          >
-            送出評分
-          </button>
+          <div class="flex gap-2">
+            <button
+              onclick="deleteGradingFromCloud()"
+              class="bg-red-600 px-6 py-4 rounded-2xl font-bold"
+            >
+              刪除紀錄
+            </button>
+            <button
+              onclick="submitGradingToCloud()"
+              class="bg-blue-600 px-12 py-4 rounded-2xl font-black text-xl shadow-xl"
+            >
+              送出評分
+            </button>
+          </div>
         </div>
       </section>
 
@@ -548,14 +563,14 @@
             id="tab-btn-venue"
             class="admin-tab active pb-4 px-2"
           >
-            場地與委員
+            場地與密碼
           </button>
           <button
             onclick="toggleAdminTab('student')"
             id="tab-btn-student"
             class="admin-tab pb-4 px-2"
           >
-            名單匯入 (Excel)
+            名單匯入
           </button>
         </div>
         <div id="admin-venue" class="admin-content space-y-6">
@@ -568,13 +583,13 @@
               onclick="saveAdminConfig()"
               class="flex-1 bg-blue-900 text-white py-3 rounded-xl font-bold"
             >
-              儲存場地配置
+              儲存配置
             </button>
             <button
               onclick="exportAllScores()"
               class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold"
             >
-              📊 匯出成績 Excel
+              📊 匯生成績 Excel
             </button>
           </div>
         </div>
@@ -589,15 +604,16 @@
             />
             <button
               onclick="clearStudentsCloud()"
-              class="bg-red-50 text-red-600 px-6 py-2 rounded-xl border border-red-200"
+              class="bg-red-50 text-red-600 px-6 py-2 rounded-xl"
             >
               清空名單
             </button>
           </div>
-
           <div class="overflow-x-auto">
-            <table id="adminStudentTable" class="w-full border-collapse block md:table">
-            </table>
+            <table
+              id="adminStudentTable"
+              class="w-full border-collapse block md:table"
+            ></table>
           </div>
         </div>
       </section>
@@ -616,196 +632,141 @@
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
 
-      let students = [];
-      let scores = [];
+      let students = [],
+        scores = [],
+        currentUser = null,
+        activeStudent = null;
       let venueConfig = {
-        A1: { room: "", judges: ["", ""] },
-        A2: { room: "", judges: ["", ""] },
-        B1: { room: "", judges: ["", ""] },
-        B2: { room: "", judges: ["", ""] },
+        A1: { room: "", judges: ["", ""], passwords: ["", ""] },
+        A2: { room: "", judges: ["", ""], passwords: ["", ""] },
+        B1: { room: "", judges: ["", ""], passwords: ["", ""] },
+        B2: { room: "", judges: ["", ""], passwords: ["", ""] },
       };
       const venues = ["A1", "A2", "B1", "B2"];
-      let currentUser = null;
-      let activeStudent = null;
 
-window.onload = async () => {
-  toggleLoading(true); // 開啟遮罩
-  
-  try {
-    // 1. 初始化後台介面內容
-    const container = document.getElementById("venueConfigContainer");
-    container.innerHTML = venues.map(v => `
-      <div class="p-5 border rounded-2xl bg-slate-50">
-        <div class="flex gap-2 mb-4">
-          <span class="bg-blue-900 text-white px-3 py-1 rounded font-bold">${v}</span>
-          <input type="text" id="vRoom_${v}" placeholder="場地名稱" class="flex-1 border-b bg-transparent outline-none">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="vJudge_${v}_1" placeholder="評審1" class="p-2 border rounded text-xs">
-          <input type="text" id="vPwd_${v}_1" placeholder="密碼1" class="p-2 border rounded text-xs">
-          <input type="text" id="vJudge_${v}_2" placeholder="評審2" class="p-2 border rounded text-xs">
-          <input type="text" id="vPwd_${v}_2" placeholder="密碼2" class="p-2 border rounded text-xs">
-        </div>
-      </div>`).join("");
-
-    // 2. 從 Firebase 讀取設定
-    const configDoc = await db.collection("Settings").doc("VenueConfig").get();
-    if (configDoc.exists) {
-      venueConfig = configDoc.data();
-      venues.forEach((v) => {
-        if (venueConfig[v]) {
-          document.getElementById(`vRoom_${v}`).value = venueConfig[v].room || "";
-          document.getElementById(`vJudge_${v}_1`).value = venueConfig[v].judges[0] || "";
-          document.getElementById(`vJudge_${v}_2`).value = venueConfig[v].judges[1] || "";
-          if (venueConfig[v].passwords) {
-            document.getElementById(`vPwd_${v}_1`).value = venueConfig[v].passwords[0] || "";
-            document.getElementById(`vPwd_${v}_2`).value = venueConfig[v].passwords[1] || "";
+      window.onload = async () => {
+        toggleLoading(true);
+        try {
+          const configDoc = await db
+            .collection("Settings")
+            .doc("VenueConfig")
+            .get();
+          if (configDoc.exists) {
+            venueConfig = configDoc.data();
           }
+          renderAdminConfigUI();
+
+          db.collection("Students").onSnapshot((snap) => {
+            students = snap.docs.map((doc) => doc.data());
+            renderAdminList();
+            if (currentUser) renderStudentList();
+          });
+          db.collection("Scores").onSnapshot((snap) => {
+            scores = snap.docs.map((doc) => doc.data());
+            renderPublicResults();
+            if (currentUser) renderStudentList();
+          });
+        } catch (e) {
+          console.error(e);
+        } finally {
+          toggleLoading(false);
+          showSection("publicResults");
         }
-      });
-    }
-    updateVenueDropdown();
+      };
 
-    // 3. 設定即時監聽
-    db.collection("Students").onSnapshot(snap => {
-      students = snap.docs.map(doc => doc.data());
-      renderAdminList();
-      if (currentUser) renderStudentList();
-    });
-
-    db.collection("Scores").onSnapshot(snap => {
-      scores = snap.docs.map(doc => doc.data());
-      renderPublicResults();
-      if (currentUser) renderStudentList();
-    });
-
-  } catch (error) {
-    console.error("初始化出錯:", error);
-    alert("雲端資料同步失敗，請檢查連線");
-  } finally {
-    // 無論成功或出錯，最後一定執行
-    toggleLoading(false); 
-    showSection("publicResults");
-  }
-};
-
-
-      // 多欄位即時排行榜邏輯
-      function renderPublicResults() {
-        const container = document.getElementById("publicRankContainer");
-        container.innerHTML = venues
-          .map((v) => {
-            const room = venueConfig[v]?.room || "未設定";
-            const judges = venueConfig[v]?.judges || ["評審1", "評審2"];
-            const vScores = scores.filter((s) => s.venue === v);
-
-            const grouped = {};
-            vScores.forEach((s) => {
-              if (!grouped[s.studentId])
-                grouped[s.studentId] = {
-                  name: s.studentName,
-                  j1: "--",
-                  j2: "--",
-                  avg: 0,
-                  sum: 0,
-                  count: 0,
-                };
-              if (s.judge === judges[0]) grouped[s.studentId].j1 = s.total;
-              else if (s.judge === judges[1]) grouped[s.studentId].j2 = s.total;
-              grouped[s.studentId].sum += s.total;
-              grouped[s.studentId].count++;
-              grouped[s.studentId].avg = Math.round(
-                grouped[s.studentId].sum / grouped[s.studentId].count
-              );
-            });
-            const rank = Object.values(grouped).sort((a, b) => b.avg - a.avg);
-
-            return `
-            <div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900">
-              <h3 class="font-black text-xl mb-4 border-b pb-2 flex justify-between">
-                <span>${v} 場地 (${room})</span>
-                <span class="text-xs text-blue-500 animate-pulse">Live</span>
-              </h3>
-              <div class="space-y-3">
-                <div class="grid grid-cols-5 text-[10px] text-slate-400 font-bold px-2">
-                  <div class="col-span-2">學生姓名</div>
-                  <div class="text-center">評審1</div>
-                  <div class="text-center">評審2</div>
-                  <div class="text-right">平均</div>
-                </div>
-                ${
-                  rank.length
-                    ? rank
-                        .map(
-                          (r, i) => `
-                  <div class="grid grid-cols-5 items-center text-sm p-2 ${
-                    i === 0 ? "bg-yellow-50 rounded-lg" : ""
-                  }">
-                    <div class="col-span-2 font-bold text-slate-700">${
-                      i + 1
-                    }. ${r.name}</div>
-                    <div class="text-center font-mono text-xs text-slate-400">${
-                      r.j1
-                    }</div>
-                    <div class="text-center font-mono text-xs text-slate-400">${
-                      r.j2
-                    }</div>
-                    <div class="text-right font-black ${
-                      i === 0 ? "text-blue-700" : "text-slate-600"
-                    }">${r.avg}</div>
-                  </div>`
-                        )
-                        .join("")
-                    : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
-                }
-              </div>
-            </div>`;
-          })
+      function renderAdminConfigUI() {
+        document.getElementById("venueConfigContainer").innerHTML = venues
+          .map(
+            (v) => `
+          <div class="p-5 border rounded-2xl bg-slate-50">
+            <div class="flex gap-2 mb-4"><span class="bg-blue-900 text-white px-3 py-1 rounded font-bold">${v}</span>
+            <input type="text" id="vRoom_${v}" value="${
+              venueConfig[v].room || ""
+            }" placeholder="教室" class="flex-1 border-b bg-transparent outline-none"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="vJudge_${v}_1" value="${
+              venueConfig[v].judges[0] || ""
+            }" placeholder="評審1姓名" class="p-2 border rounded text-xs">
+              <input type="text" id="vPwd_${v}_1" value="${
+              venueConfig[v].passwords ? venueConfig[v].passwords[0] : ""
+            }" placeholder="密碼1" class="p-2 border rounded text-xs">
+              <input type="text" id="vJudge_${v}_2" value="${
+              venueConfig[v].judges[1] || ""
+            }" placeholder="評審2姓名" class="p-2 border rounded text-xs">
+              <input type="text" id="vPwd_${v}_2" value="${
+              venueConfig[v].passwords ? venueConfig[v].passwords[1] : ""
+            }" placeholder="密碼2" class="p-2 border rounded text-xs">
+            </div>
+          </div>`
+          )
           .join("");
       }
 
-// 開啟學生查詢頁面
-async function fetchStudentResult() {
-  const sid = document.getElementById("querySid").value.trim();
-  if (!sid) return alert("請輸入學號");
+      function judgeLogin() {
+        const p = document.getElementById("jPassword").value.trim();
+        if (!p) return alert("請輸入密碼");
+        let found = null;
+        for (let v of venues) {
+          const cfg = venueConfig[v];
+          if (cfg && cfg.passwords) {
+            const idx = cfg.passwords.indexOf(p);
+            if (idx !== -1) {
+              found = { name: cfg.judges[idx], venue: v, room: cfg.room };
+              break;
+            }
+          }
+        }
+        if (found) {
+          currentUser = found;
+          document.getElementById(
+            "displayVenue"
+          ).innerText = `${found.venue} 場地清單`;
+          document.getElementById(
+            "displayRoom"
+          ).innerText = `教室：${found.room}`;
+          document.getElementById(
+            "displayJudge"
+          ).innerText = `評審：${found.name}`;
+          showSection("judgeDashboard");
+          renderStudentList();
+        } else {
+          alert("密碼錯誤！");
+        }
+      }
 
-  toggleLoading(true);
-  try {
-    // 從 Scores 集合中抓取該學號的所有評分資料
-    const snap = await db.collection("Scores").where("studentId", "==", sid).get();
-    
-    if (snap.empty) {
-      alert("尚未有評分紀錄，請確認學號是否正確或稍後再試。");
-      document.getElementById("queryResult").classList.add("hidden");
-    } else {
-      let totalSum = 0;
-      let html = "";
-      
-      snap.forEach(doc => {
-        const d = doc.data();
-        totalSum += d.total;
-        html += `
-          <div class="p-4 bg-white border rounded-xl shadow-sm text-sm">
-            <p class="font-bold text-blue-900 border-b pb-1 mb-2">評審建議：</p>
-            <p class="whitespace-pre-line text-slate-600 italic">${d.feedback_json.summary || "無具體評語"}</p>
-          </div>`;
-      });
+      async function fetchStudentResult() {
+        const sid = document.getElementById("querySid").value.trim();
+        if (!sid) return alert("請輸入學號");
+        toggleLoading(true);
+        try {
+          const snap = await db
+            .collection("Scores")
+            .where("studentId", "==", sid)
+            .get();
+          if (snap.empty) {
+            alert("尚未有評分紀錄");
+            document.getElementById("queryResult").classList.add("hidden");
+          } else {
+            let sum = 0,
+              html = "";
+            snap.forEach((doc) => {
+              const d = doc.data();
+              sum += d.total;
+              html += `<div class="p-4 bg-white border rounded-xl text-sm"><p class="font-bold text-blue-900 border-b mb-2">評審建議：</p><p class="italic text-slate-600">${
+                d.feedback_json.summary || "無評語"
+              }</p></div>`;
+            });
+            document.getElementById("resAvg").innerText = Math.round(
+              sum / snap.size
+            );
+            document.getElementById("resDetails").innerHTML = html;
+            document.getElementById("queryResult").classList.remove("hidden");
+          }
+        } finally {
+          toggleLoading(false);
+        }
+      }
 
-      document.getElementById("resAvg").innerText = Math.round(totalSum / snap.size);
-      document.getElementById("resDetails").innerHTML = html;
-      document.getElementById("queryResult").classList.remove("hidden");
-    }
-  } catch (e) {
-    alert("查詢出錯");
-  } finally {
-    toggleLoading(false);
-  }
-}
-
-
-
-
-      // 開啟評分頁面 (含回顯邏輯)
       function openScoring(sid) {
         activeStudent = students.find((s) => s.id === sid);
         document.getElementById("scoringName").innerText = activeStudent.name;
@@ -818,6 +779,19 @@ async function fetchStudentResult() {
         const history = scores.find(
           (sc) => sc.studentId === sid && sc.judge === currentUser.name
         );
+        // 重置所有欄位
+        [
+          "profRaw",
+          "techRaw",
+          "judgeComment",
+          "r_content",
+          "r_fluency",
+          "r_qa",
+          "r_time",
+          "r_outfit",
+        ].forEach((id) => (document.getElementById(id).value = ""));
+        document.getElementById("finalScoreDisplay").innerText = "0";
+
         if (history) {
           document.getElementById("profRaw").value = history.profRaw || "";
           document.getElementById("techRaw").value = history.techRaw || "";
@@ -826,79 +800,40 @@ async function fetchStudentResult() {
           document.getElementById("finalScoreDisplay").innerText =
             history.total || "0";
           if (history.details) {
-            ["content", "fluency", "qa", "time", "outfit"].forEach((key) => {
-              const d = history.details[key];
-              document.getElementById(`v_${key}`).value = d.score || "3";
-              document.getElementById(`r_${key}`).value = d.reason || "";
+            ["content", "fluency", "qa", "time", "outfit"].forEach((k) => {
+              if (history.details[k])
+                document.getElementById(`r_${k}`).value =
+                  history.details[k].reason || "";
             });
           }
-        } else {
-          // 重置
-          [
-            "profRaw",
-            "techRaw",
-            "judgeComment",
-            "r_content",
-            "r_fluency",
-            "r_qa",
-            "r_time",
-            "r_outfit",
-          ].forEach((id) => (document.getElementById(id).value = ""));
-          ["v_content", "v_fluency", "v_qa", "v_time", "v_outfit"].forEach(
-            (id) => (document.getElementById(id).value = "3")
-          );
-          document.getElementById("finalScoreDisplay").innerText = "0";
         }
         showSection("scoreSection");
       }
 
       async function deleteGradingFromCloud() {
-        // 1. 安全確認
-        if (!confirm(`確定要完全刪除對「${activeStudent.name}」的評分紀錄嗎？\n刪除後該生將恢復為「尚未評分」狀態。`)) return;
-
+        if (!confirm("確定刪除此生評分紀錄？")) return;
         toggleLoading(true);
-        const docId = `${currentUser.name}_${activeStudent.id}`;
-
         try {
-          // 2. 從 Firebase 刪除文件
-          await db.collection("Scores").doc(docId).delete();
-    
-          alert("紀錄已成功刪除");
-    
-          // 3. 重置目前的輸入欄位
-          [
-            "profRaw", "techRaw", "judgeComment",
-            "r_content", "r_fluency", "r_qa", "r_time", "r_outfit"
-          ].forEach(id => document.getElementById(id).value = "");
-    
-          ["v_content", "v_fluency", "v_qa", "v_time", "v_outfit"].forEach(
-            id => document.getElementById(id).value = "3"
-          );
-          document.getElementById("finalScoreDisplay").innerText = "0";
-
-          // 4. 返回場地清單
+          await db
+            .collection("Scores")
+            .doc(`${currentUser.name}_${activeStudent.id}`)
+            .delete();
+          alert("已刪除");
           showSection("judgeDashboard");
-    
-        } catch (e) {
-          console.error(e);
-          alert("刪除失敗，請檢查網路連線");
         } finally {
           toggleLoading(false);
         }
       }
 
-
-
       async function submitGradingToCloud() {
-        const p = document.getElementById("profRaw").value;
-        const t = document.getElementById("techRaw").value;
-        if (p === "" || t === "") return alert("請輸入 0-100 分數");
+        const p = document.getElementById("profRaw").value,
+          t = document.getElementById("techRaw").value;
+        if (p === "" || t === "") return alert("請輸入分數");
         toggleLoading(true);
-        const docId = `${currentUser.name}_${activeStudent.id}`;
         try {
           await db
             .collection("Scores")
-            .doc(docId)
+            .doc(`${currentUser.name}_${activeStudent.id}`)
             .set({
               judge: currentUser.name,
               venue: currentUser.venue,
@@ -910,60 +845,44 @@ async function fetchStudentResult() {
               profRaw: parseInt(p),
               techRaw: parseInt(t),
               details: {
-                content: {
-                  score: document.getElementById("v_content").value,
-                  reason: document.getElementById("r_content").value,
-                },
-                fluency: {
-                  score: document.getElementById("v_fluency").value,
-                  reason: document.getElementById("r_fluency").value,
-                },
-                qa: {
-                  score: document.getElementById("v_qa").value,
-                  reason: document.getElementById("r_qa").value,
-                },
-                time: {
-                  score: document.getElementById("v_time").value,
-                  reason: document.getElementById("r_time").value,
-                },
-                outfit: {
-                  score: document.getElementById("v_outfit").value,
-                  reason: document.getElementById("r_outfit").value,
-                },
+                content: { reason: document.getElementById("r_content").value },
+                fluency: { reason: document.getElementById("r_fluency").value },
+                qa: { reason: document.getElementById("r_qa").value },
+                time: { reason: document.getElementById("r_time").value },
+                outfit: { reason: document.getElementById("r_outfit").value },
               },
               feedback_json: {
                 summary: document.getElementById("judgeComment").value,
               },
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             });
-          alert("評分成功！");
+          alert("評分成功");
           showSection("judgeDashboard");
-        } catch (e) {
-          alert("儲存失敗");
+        } finally {
+          toggleLoading(false);
         }
-        toggleLoading(false);
       }
 
       function syncToOverall() {
         const map = [
-          { id: "r_content", label: "內容" },
-          { id: "r_fluency", label: "流暢" },
-          { id: "r_qa", label: "應答" },
-          { id: "r_time", label: "時間" },
-          { id: "r_outfit", label: "服儀" },
+          { id: "r_content", l: "內容" },
+          { id: "r_fluency", l: "流暢" },
+          { id: "r_qa", l: "應答" },
+          { id: "r_time", l: "時間" },
+          { id: "r_outfit", l: "服儀" },
         ];
         document.getElementById("judgeComment").value = map
-          .map((item) => {
-            const val = document.getElementById(item.id).value.trim();
-            return val ? `【${item.label}】${val}` : "";
+          .map((i) => {
+            const v = document.getElementById(i.id).value.trim();
+            return v ? `【${i.l}】${v}` : "";
           })
-          .filter((s) => s !== "")
+          .filter((s) => s)
           .join("\n");
       }
 
       function calcTotal() {
-        const p = parseFloat(document.getElementById("profRaw").value) || 0;
-        const t = parseFloat(document.getElementById("techRaw").value) || 0;
+        const p = parseFloat(document.getElementById("profRaw").value) || 0,
+          t = parseFloat(document.getElementById("techRaw").value) || 0;
         document.getElementById("finalScoreDisplay").innerText = Math.round(
           p * 0.7 + t * 0.3
         );
@@ -975,32 +894,64 @@ async function fetchStudentResult() {
         syncToOverall();
       }
 
-      // 管理與工具
-      function judgeLogin() {
-        const v = document.getElementById("jVenue").value;
-        const n = document.getElementById("jName").value.trim();
-        const p = document.getElementById("jPassword").value.trim(); // 取得輸入密碼
+      async function saveAdminConfig() {
+        venues.forEach((v) => {
+          venueConfig[v] = {
+            room: document.getElementById(`vRoom_${v}`).value,
+            judges: [
+              document.getElementById(`vJudge_${v}_1`).value,
+              document.getElementById(`vJudge_${v}_2`).value,
+            ],
+            passwords: [
+              document.getElementById(`vPwd_${v}_1`).value,
+              document.getElementById(`vPwd_${v}_2`).value,
+            ],
+          };
+        });
+        await db.collection("Settings").doc("VenueConfig").set(venueConfig);
+        alert("儲存成功");
+      }
 
-        if (!n || !p) return alert("請輸入完整姓名與密碼");
-        // 取得該場地配置資訊
-          const config = venueConfig[v];
-  
-          // 找出該姓名在評審陣列中的索引 (0 或 1)
-          const judgeIndex = config.judges.indexOf(n);
-
-          // 驗證邏輯：姓名必須存在，且對應位置的密碼必須正確
-          if (judgeIndex !== -1 && config.passwords && config.passwords[judgeIndex] === p) {
-            currentUser = { name: n, venue: v, room: config.room };
-            document.getElementById("displayVenue").innerText = `${v} 場地清單`;
-            document.getElementById("displayRoom").innerText = `教室：${currentUser.room}`;
-            document.getElementById("displayJudge").innerText = `評審：${n}`;
-            showSection("judgeDashboard");
-            renderStudentList();
-          } else {
-            alert("姓名或密碼錯誤，請重新輸入");
-          }
-        }
-
+      function renderPublicResults() {
+        document.getElementById("publicRankContainer").innerHTML = venues
+          .map((v) => {
+            const room = venueConfig[v]?.room || "未定",
+              judges = venueConfig[v]?.judges || ["J1", "J2"];
+            const vScores = scores.filter((s) => s.venue === v);
+            const grouped = {};
+            vScores.forEach((s) => {
+              if (!grouped[s.studentId])
+                grouped[s.studentId] = {
+                  name: s.studentName,
+                  j1: "--",
+                  j2: "--",
+                  sum: 0,
+                  count: 0,
+                };
+              if (s.judge === judges[0]) grouped[s.studentId].j1 = s.total;
+              else if (s.judge === judges[1]) grouped[s.studentId].j2 = s.total;
+              grouped[s.studentId].sum += s.total;
+              grouped[s.studentId].count++;
+            });
+            const rank = Object.values(grouped).sort(
+              (a, b) => b.sum / b.count - a.sum / a.count
+            );
+            return `<div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900"><h3 class="font-bold mb-4">${v} 場地 (${room})</h3>
+            <div class="space-y-2 text-sm">${
+              rank
+                .map(
+                  (r, i) =>
+                    `<div class="flex justify-between p-2 ${
+                      i == 0 ? "bg-yellow-50 font-bold" : ""
+                    }"><span>${i + 1}. ${r.name}</span><span>${Math.round(
+                      r.sum / r.count
+                    )}分</span></div>`
+                )
+                .join("") || "等待評分..."
+            }</div></div>`;
+          })
+          .join("");
+      }
 
       function renderStudentList() {
         const container = document.getElementById("studentListContainer");
@@ -1012,60 +963,30 @@ async function fetchStudentResult() {
             );
             return `<div onclick="openScoring('${
               s.id
-            }')" class="flex items-center p-4 border-b hover:bg-slate-50 cursor-pointer">
-              <div class="flex-1">
-                <p class="text-[10px] font-mono text-slate-400">${s.id}</p>
-                <h3 class="font-bold text-lg">${s.name}</h3>
-                <p class="text-xs text-slate-500 truncate">${s.title || ""}</p>
-              </div>
-              ${
-                isDone
-                  ? '<span class="checkmark">✔ 已完成</span>'
-                  : '<span class="text-xs text-slate-300">尚未評分</span>'
-              }
-            </div>`;
+            }')" class="flex justify-between p-4 border-b hover:bg-slate-50 cursor-pointer">
+            <div><p class="text-[10px] text-slate-400 font-mono">${
+              s.id
+            }</p><h3 class="font-bold">${s.name}</h3></div>
+            ${
+              isDone
+                ? '<span class="checkmark">✔ 已完成</span>'
+                : '<span class="text-xs text-slate-300">尚未評分</span>'
+            }
+          </div>`;
           })
           .join("");
       }
 
-      async function saveAdminConfig() {
-        venues.forEach((v) => {
-          venueConfig[v] = {
-            room: document.getElementById(`vRoom_${v}`).value,
-            judges: [
-              document.getElementById(`vJudge_${v}_1`).value,
-              document.getElementById(`vJudge_${v}_2`).value,
-            ],
-            passwords: [ // 增加儲存密碼陣列
-              document.getElementById(`vPwd_${v}_1`).value,
-              document.getElementById(`vPwd_${v}_2`).value,
-            ],
-          };
-        });
-        await db.collection("Settings").doc("VenueConfig").set(venueConfig);
-        alert("雲端同步成功");
-        updateVenueDropdown();
-        renderPublicResults();
-      }
-
-      function exportAllScores() {
-        const data = scores.map((s) => ({
-          場地: s.venue,
-          評審: s.judge,
-          學生: s.studentName,
-          學號: s.studentId,
-          專業分: s.profRaw,
-          技術分: s.techRaw,
-          加權總分: s.total,
-          評語: s.feedback_json.summary,
-        }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Scores");
-        XLSX.writeFile(
-          wb,
-          `淡江化材研討會成績_${new Date().toLocaleDateString()}.xlsx`
-        );
+      function renderAdminList() {
+        const table = document.getElementById("adminStudentTable");
+        const header = `<thead class="hidden md:table-header-group bg-slate-100 font-bold"><tr><td class="p-3 border">學號</td><td class="p-3 border">姓名</td><td class="p-3 border">場地</td></tr></thead>`;
+        const rows = students
+          .map(
+            (s) =>
+              `<tr class="block md:table-row border-b p-4 md:p-0"><td class="block md:table-cell p-1 md:p-3">${s.id}</td><td class="block md:table-cell p-1 md:p-3 font-bold">${s.name}</td><td class="block md:table-cell p-1 md:p-3">${s.venue}</td></tr>`
+          )
+          .join("");
+        table.innerHTML = header + `<tbody>${rows}</tbody>`;
       }
 
       async function handleExcelImport(input) {
@@ -1095,30 +1016,23 @@ async function fetchStudentResult() {
         reader.readAsArrayBuffer(input.files[0]);
       }
 
-      function enterAdmin() {
-        if (prompt("請輸入管理密碼,提示t???2??4") === "tedx2614")
-          showSection("adminDashboard");
+      function exportAllScores() {
+        const data = scores.map((s) => ({
+          場地: s.venue,
+          評審: s.judge,
+          學生: s.studentName,
+          學號: s.studentId,
+          專業分: s.profRaw,
+          技術分: s.techRaw,
+          加權總分: s.total,
+          評語: s.feedback_json.summary,
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Scores");
+        XLSX.writeFile(wb, `成績匯出_${new Date().toLocaleDateString()}.xlsx`);
       }
-      function clearStudentsCloud() {
-        if (confirm("確定清空？"))
-          db.collection("Students")
-            .get()
-            .then((qs) => {
-              const b = db.batch();
-              qs.forEach((d) => b.delete(d.ref));
-              b.commit();
-            });
-      }
-      function toggleLoading(s) {
-        document.getElementById("loading").classList.toggle("hidden", !s);
-      }
-      function showSection(id) {
-        document
-          .querySelectorAll("main > section")
-          .forEach((s) => s.classList.add("hidden"));
-        document.getElementById(id).classList.remove("hidden");
-        window.scrollTo(0, 0);
-      }
+
       function toggleAdminTab(t) {
         document
           .querySelectorAll(".admin-content")
@@ -1129,69 +1043,30 @@ async function fetchStudentResult() {
         document.getElementById(`admin-${t}`).classList.remove("hidden");
         document.getElementById(`tab-btn-${t}`).classList.add("active");
       }
-      function updateVenueDropdown() {
-        document.getElementById("jVenue").innerHTML = venues
-          .map(
-            (v) =>
-              `<option value="${v}">${v} 場地 (${
-                venueConfig[v].room || ""
-              })</option>`
-          )
-          .join("");
+      function showSection(id) {
+        document
+          .querySelectorAll("main > section")
+          .forEach((s) => s.classList.add("hidden"));
+        document.getElementById(id).classList.remove("hidden");
+        window.scrollTo(0, 0);
       }
-
-
-      function renderAdminList() {
-        const tableBody = document.getElementById("adminStudentTable");
-
-        // 1. 表頭：在手機端隱藏 (hidden)，中視窗以上顯示 (md:table-header-group)
-        const header = `
-          <thead class="hidden md:table-header-group bg-slate-100 font-bold">
-            <tr>
-              <td class="p-3 border">學號 (ID)</td>
-              <td class="p-3 border">姓名</td>
-              <td class="p-3 border">指導教授</td>
-              <td class="p-3 border">論文題目</td>
-              <td class="p-3 border text-center">場地</td>
-            </tr>
-          </thead>`;
-
-        // 2. 資料列：手機端轉為卡片 (block + shadow)，中視窗以上恢復為表格列 (md:table-row)
-        const rows = students.map((s) => `
-          <tr class="block md:table-row mb-4 md:mb-0 bg-white border md:border-b shadow-sm md:shadow-none rounded-xl md:rounded-none p-4 md:p-0">
-      
-            <td data-label="學號" class="block md:table-cell p-1 md:p-3 text-xs font-mono text-slate-500 md:text-slate-900 
-              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
-              ${s.id}
-            </td>
-      
-            <td data-label="姓名" class="block md:table-cell p-1 md:p-3 font-bold text-lg md:text-base
-              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
-              ${s.name}
-            </td>
-      
-            <td data-label="指導教授" class="block md:table-cell p-1 md:p-3 text-sm
-              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
-              ${s.advisor || "--"}
-            </td>
-      
-            <td data-label="論文題目" class="block md:table-cell p-1 md:p-3 text-xs text-slate-600
-              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
-              ${s.title || "--"}
-            </td>
-      
-            <td data-label="場地" class="block md:table-cell p-1 md:p-3 text-left md:text-center
-              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
-              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold inline-block mt-1 md:mt-0">
-                ${s.venue}
-              </span>
-            </td>
-      
-          </tr>
-        `).join("");
-
-        tableBody.innerHTML = header + `<tbody class="block md:table-row-group">${rows}</tbody>`;
+      function toggleLoading(s) {
+        document.getElementById("loading").classList.toggle("hidden", !s);
       }
+      function enterAdmin() {
+        if (prompt("密碼?") === "tedx2614") showSection("adminDashboard");
+      }
+      function clearStudentsCloud() {
+        if (confirm("清空?"))
+          db.collection("Students")
+            .get()
+            .then((qs) => {
+              const b = db.batch();
+              qs.forEach((d) => b.delete(d.ref));
+              b.commit();
+            });
+      }
+      function updateVenueDropdown() {} // 已改為密碼登入，此函數保留以防報錯
     </script>
   </body>
 </html>
