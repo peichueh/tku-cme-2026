@@ -1,595 +1,1197 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>2026 淡江化材研討會評分系統-安全加密版</title>
+    <title>2026 淡江化材研討會評分系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-      body {
-        background-color: #f1f5f9;
-        color: #1e293b;
-        font-family: system-ui, sans-serif;
+      .admin-tab.active {
+        border-bottom: 3px solid #1e3a8a;
+        color: #1e3a8a;
+        font-weight: bold;
       }
-      .admin-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      .dimension-card {
+        border-left: 4px solid #3b82f6;
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+        background: #fff;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
-      .nav-btn {
-        color: #64748b;
-        font-weight: 600;
-        padding: 12px 16px;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s;
-      }
-      .nav-btn.active {
-        color: #2563eb;
-        border-bottom-color: #2563eb;
-      }
-      .chip-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .chip-label {
-        display: inline-block;
-        padding: 6px 14px;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        color: #475569;
+      .btn-pos {
+        background-color: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        padding: 2px 8px;
+        border-radius: 99px;
+        font-size: 11px;
+        margin-right: 4px;
+        margin-top: 4px;
+        transition: 0.2s;
         cursor: pointer;
-        transition: all 0.2s;
       }
-      .chip-item input:checked + .chip-label {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      .btn-neg {
+        background-color: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        padding: 2px 8px;
+        border-radius: 99px;
+        font-size: 11px;
+        margin-right: 4px;
+        margin-top: 4px;
+        transition: 0.2s;
+        cursor: pointer;
       }
-      .chip-item.pro input:checked + .chip-label {
-        background: #dcfce7;
-        border-color: #22c55e;
-        color: #166534;
+      .btn-pos:hover {
+        background-color: #dcfce7;
+        transform: translateY(-1px);
       }
-      .chip-item.con input:checked + .chip-label {
-        background: #fee2e2;
-        border-color: #ef4444;
-        color: #991b1b;
+      .btn-neg:hover {
+        background-color: #fee2e2;
+        transform: translateY(-1px);
       }
-      input,
-      select,
-      textarea {
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
+      .checkmark {
+        color: #10b981;
+        font-weight: bold;
+        margin-left: auto;
+        font-size: 14px;
+      }
+      .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .instruction-box {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
         padding: 10px;
-        width: 100%;
-      }
-      .score-label {
-        font-size: 0.85rem;
-        color: #64748b;
-        margin-bottom: 4px;
-        display: block;
-        font-weight: 700;
+        border-radius: 12px;
+        font-size: 12px;
+        margin-bottom: 20px;
       }
     </style>
   </head>
-  <body>
-    <div class="max-w-6xl mx-auto px-4 py-6">
-      <header
-        class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4"
-      >
-        <div class="text-center md:text-left">
-          <h1 class="text-2xl font-black text-slate-800 tracking-tight">
-            2026 淡江大學化材與材料研討會
-          </h1>
-          <p
-            class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1"
-          >
-            Online Scoring System v2.8 (Security Locked)
-          </p>
-        </div>
-        <nav
-          class="flex bg-white rounded-xl shadow-sm p-1 border border-slate-200"
-        >
-          <button onclick="showView('admin')" id="nav-admin" class="nav-btn">
-            管理
-          </button>
-          <button onclick="showView('judge')" id="nav-judge" class="nav-btn">
-            評審
-          </button>
-          <button
-            onclick="showView('assistant')"
-            id="nav-assistant"
-            class="nav-btn"
-          >
-            統計
-          </button>
-        </nav>
-      </header>
-
-      <div id="view-admin" class="view-section hidden space-y-6">
-        <div class="admin-card p-6 border border-slate-200">
-          <h2 class="font-bold mb-6 text-slate-700 flex items-center gap-2">
-            <i data-lucide="settings" class="w-5 h-5"></i> 場次與評審設定
-          </h2>
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 gap-6"
-            id="config-grid"
-          ></div>
-          <button
-            onclick="saveConfig()"
-            class="mt-8 w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition"
-          >
-            儲存系統設定 (需密碼)
-          </button>
-        </div>
-
-        <div class="admin-card p-6">
-          <h2 class="font-bold mb-4 flex items-center gap-2">
-            <i data-lucide="file-up" class="w-5 h-5"></i> 名單匯入
-          </h2>
-          <input type="file" id="excel-file" class="text-sm" />
-          <button
-            onclick="importExcel()"
-            class="bg-slate-800 text-white px-8 py-2 rounded-lg font-bold mt-4"
-          >
-            讀取並上傳至雲端
-          </button>
-        </div>
-      </div>
-
-      <div id="view-judge" class="view-section hidden">
-        <div
-          class="bg-slate-800 text-white p-6 rounded-2xl shadow-xl mb-8 flex flex-col md:flex-row gap-6"
-        >
-          <div class="flex-1">
-            <label
-              class="text-[10px] font-black opacity-60 mb-1 block uppercase tracking-widest"
-              >Select Venue</label
-            >
-            <select
-              id="judge-venue"
-              onchange="updateJudgeOptions(); loadStudentList();"
-              class="bg-slate-700 border-none text-white focus:ring-2 ring-blue-500"
-            ></select>
-          </div>
-          <div class="flex-1">
-            <label
-              class="text-[10px] font-black opacity-60 mb-1 block uppercase tracking-widest"
-              >Select Judge</label
-            >
-            <select
-              id="judge-id"
-              onchange="loadStudentList()"
-              class="bg-slate-700 border-none text-white focus:ring-2 ring-blue-500"
-            ></select>
-          </div>
-        </div>
-        <div id="student-list" class="space-y-4"></div>
-      </div>
-
-      <div id="view-assistant" class="view-section hidden space-y-6">
-        <div
-          class="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-200"
-        >
-          <h2 class="text-xl font-black text-slate-800">成績即時彙整</h2>
-          <button
-            onclick="exportFullReport()"
-            class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2"
-          >
-            <i data-lucide="download" class="w-4 h-4"></i> 匯出總表
-          </button>
-        </div>
-        <div
-          id="result-container"
-          class="grid grid-cols-1 lg:grid-cols-2 gap-8"
-        ></div>
-      </div>
+  <body class="bg-slate-50 min-h-screen font-sans text-slate-900">
+    <div id="loading" class="loading-overlay hidden flex-col">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mb-4"
+      ></div>
+      <p class="font-bold text-blue-900">同步雲端資料中...</p>
     </div>
 
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-      import {
-        getFirestore,
-        collection,
-        doc,
-        setDoc,
-        getDoc,
-        getDocs,
-        updateDoc,
-        query,
-        where,
-        deleteDoc,
-      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <nav class="bg-blue-900 text-white shadow-xl p-4 sticky top-0 z-50">
+      <div class="container mx-auto flex justify-between items-center">
+        <div>
+          <h1 class="text-xl font-bold">2026 淡江化材研討會</h1>
+          <p class="text-xs opacity-70">2026/01/13 | 自動彙整評分助理</p>
+        </div>
+        <div class="flex gap-2">
+          <button
+            onclick="showSection('publicResults')"
+            class="text-xs bg-green-600 px-4 py-2 rounded-full"
+          >
+            即時排行榜
+          </button>
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyBlpONrpMRHvDbXWqiAGlSvIAQsc-mCRR8",
-        authDomain: "tku-cme-2026.firebaseapp.com",
-        projectId: "tku-cme-2026",
-        storageBucket: "tku-cme-2026.firebasestorage.app",
-        messagingSenderId: "705317882780",
-        appId: "1:705317882780:web:ae6d22fe505c5628839659",
-      };
+          <button onclick="showSection('studentQuery')" class="text-xs bg-orange-600 px-4 py-2 rounded-full">
+            學生查分
+          </button>
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      let systemConfig = {};
-      let userSecret = ""; // 安全密鑰變數
-      const venues = ["A", "B", "C", "D"];
 
-      // 評語選項 (保持不變)
-      const commentOptions = {
-        "A.專業表現": {
-          內容與邏輯: {
-            pros: [
-              "架構完整，層次分明",
-              "邏輯嚴謹，數據具說服力",
-              "目標明確，價值敘述詳盡",
-            ],
-            cons: [
-              "重心不夠聚焦",
-              "文字冗長，應多利用圖表",
-              "方法論述不足",
-              "結論與數據關聯弱",
-            ],
-          },
-          口條與流暢: {
-            pros: ["敘事自然流暢", "自信沉穩，節奏佳", "對內容熟悉度高"],
-            cons: ["唸稿感重，欠缺互動", "語速偏快", "章節銜接生硬"],
-          },
-          答詢應變: {
-            pros: ["答詢切中要領", "邏輯應變力強", "態度謙和得體"],
-            cons: ["回覆過於簡略", "答詢與方法不一致", "反應較慢，需加強模擬"],
-          },
-        },
-        "B.技術規範": {
-          控時與儀容: {
-            pros: ["節奏掌握完美", "服儀莊重大方"],
-            cons: [
-              "報告超時",
-              "前言佔比過高",
-              "剩餘時間過多",
-              "服裝建議更正式",
-            ],
-          },
-        },
-      };
+          <button
+            onclick="showSection('loginSection')"
+            class="text-xs bg-blue-700 px-4 py-2 rounded-full"
+          >
+            評審入口
+          </button>
+          <button
+            onclick="enterAdmin()"
+            class="text-xs bg-red-700 px-4 py-2 rounded-full"
+          >
+            管理後台
+          </button>
+        </div>
+      </div>
+    </nav>
 
-      // --- 安全登入邏輯 ---
-      window.onload = () => {
-        userSecret = prompt("請輸入系統操作密碼（寫入權限）：", "");
-        if (!userSecret) {
-          alert(
-            "提醒：您目前僅有『檢視權限』。若要評分或修改設定，請重新整理頁面並輸入密碼。"
-          );
-        }
-        renderConfigInputs();
-        fetchConfig().then(() => showView("judge"));
-      };
+    <main class="container mx-auto p-4 max-w-6xl">
+      <section id="publicResults" class="hidden space-y-6">
+        <h2 class="text-3xl font-black text-center text-blue-900 my-8 italic">
+          各場地即時成績看板 (自動更新)
+        </h2>
+        <div
+          id="publicRankContainer"
+          class="grid grid-cols-1 md:grid-cols-2 gap-8"
+        ></div>
+      </section>
 
-      function renderConfigInputs() {
-        const container = document.getElementById("config-grid");
-        const colors = { A: "blue", B: "indigo", C: "emerald", D: "amber" };
-        container.innerHTML = venues
-          .map(
-            (v) => `
-          <div class="bg-${colors[v]}-50/50 p-5 rounded-2xl border border-${colors[v]}-100">
-            <h3 class="font-black text-${colors[v]}-700 mb-4">場次 ${v}</h3>
-            <input type="text" id="conf-venue${v}-name" placeholder="場地名稱" class="mb-2">
-            <input type="text" id="conf-venue${v}-j1" placeholder="評審 1" class="mb-2">
-            <input type="text" id="conf-venue${v}-j2" placeholder="評審 2">
+<section id="studentQuery" class="hidden max-w-md mx-auto bg-white p-10 mt-12 rounded-3xl shadow-2xl border">
+  <h2 class="text-2xl font-black mb-6 text-center text-slate-800">成績與評語查詢</h2>
+  <div class="space-y-4">
+    <input type="text" id="querySid" class="w-full p-3 border-2 rounded-xl outline-none focus:border-orange-500" placeholder="請輸入學號 (如: 410...)">
+    <button onclick="fetchStudentResult()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg">搜尋我的紀錄</button>
+  </div>
+  
+  <div id="queryResult" class="mt-8 hidden space-y-4">
+    <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100">
+      <p class="text-xs text-orange-800 font-bold">總平均分數</p>
+      <p id="resAvg" class="text-5xl font-black text-orange-600">--</p>
+    </div>
+    <div id="resDetails" class="space-y-3">
+      </div>
+  </div>
+</section>
+
+
+      <section
+        id="loginSection"
+        class="hidden max-w-md mx-auto bg-white p-10 mt-12 rounded-3xl shadow-2xl border"
+      >
+        <h2 class="text-2xl font-black mb-8 text-center text-slate-800">
+          評審登入
+        </h2>
+        <div class="space-y-6">
+          <select
+            id="jVenue"
+            class="w-full p-3 border-2 rounded-xl bg-slate-50 outline-none focus:border-blue-500"
+          ></select>
+          <input
+            type="text"
+            id="jName"
+            class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500"
+            placeholder="請輸入評審姓名"
+          />
+          <input
+            type="password"
+            id="jPassword"
+            class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500"
+            placeholder="請輸入評審密碼(預設人員代號)"
+          />
+          <button
+            onclick="judgeLogin()"
+            class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg"
+          >
+            進入評分清單
+          </button>
+        </div>
+      </section>
+
+      <section id="judgeDashboard" class="hidden space-y-6">
+        <div class="flex justify-between items-center border-b pb-4">
+          <h2 id="displayVenue" class="text-2xl font-black text-blue-900">
+            場地名單
+          </h2>
+          <div class="text-right">
+            <p id="displayRoom" class="text-slate-500 font-bold text-sm">
+              教室：--
+            </p>
+            <p id="displayJudge" class="text-xs text-slate-400 font-bold">
+              評審：--
+            </p>
           </div>
-        `
+        </div>
+        <div
+          id="studentListContainer"
+          class="bg-white rounded-2xl shadow-md border overflow-hidden"
+        ></div>
+      </section>
+
+      <section
+        id="scoreSection"
+        class="hidden max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-2xl border-t-8 border-blue-900"
+      >
+        <button
+          onclick="showSection('judgeDashboard')"
+          class="mb-6 text-blue-600 font-bold hover:underline"
+        >
+          ← 返回名單
+        </button>
+        <div class="instruction-box">
+          <strong>💡 操作說明：</strong><br />
+          點選下方維度中的
+          <span class="text-green-700 font-bold">綠色按鈕</span> (正面評價) 或
+          <span class="text-red-700 font-bold">紅色按鈕</span>
+          (待加強建議)，評語會自動彙整至下方的「委員總結建議」。您也可以在格子內自行輸入文字，系統會即時同步。
+        </div>
+
+        <div class="mb-8 border-b pb-4 flex justify-between items-end">
+          <div>
+            <h2 id="scoringName" class="text-3xl font-black text-slate-800">
+              評分對象
+            </h2>
+            <p id="scoringTitle" class="text-slate-500 text-sm mt-1 italic"></p>
+          </div>
+          <p id="scoringAdvisor" class="text-blue-700 text-xs font-bold"></p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div class="space-y-4">
+            <h3 class="font-bold text-blue-700 border-b pb-2">
+              A. 專業性評分 (70%)
+            </h3>
+            <div class="dimension-card">
+              <label class="block text-xs font-bold text-slate-500 mb-1"
+                >報告內容 (1-5)</label
+              >
+              <div class="flex gap-2">
+                <select
+                  id="v_content"
+                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
+                >
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3" selected>3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
+                </select>
+                <input
+                  type="text"
+                  id="r_content"
+                  oninput="syncToOverall()"
+                  placeholder="[本項評語]可輸入文字,自動彙整中..."
+                  class="flex-1 text-xs border-b outline-none"
+                />
+              </div>
+              <div class="flex flex-wrap mt-2">
+                <button
+                  onclick="appendReason('r_content','架構嚴謹')"
+                  class="btn-pos"
+                >
+                  架構嚴謹
+                </button>
+                <button
+                  onclick="appendReason('r_content','目標明確')"
+                  class="btn-pos"
+                >
+                  目標明確
+                </button>
+                <button
+                  onclick="appendReason('r_content','內容空泛')"
+                  class="btn-neg"
+                >
+                  內容空泛
+                </button>
+                <button
+                  onclick="appendReason('r_content','數據混亂')"
+                  class="btn-neg"
+                >
+                  數據混亂
+                </button>
+              </div>
+            </div>
+
+            <div class="dimension-card">
+              <label class="block text-xs font-bold text-slate-500 mb-1"
+                >報告流暢度 (1-5)</label
+              >
+              <div class="flex gap-2">
+                <select
+                  id="v_fluency"
+                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
+                >
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3" selected>3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
+                </select>
+                <input
+                  type="text"
+                  id="r_fluency"
+                  oninput="syncToOverall()"
+                  placeholder="[本項評語]可輸入文字,自動彙整中..."
+                  class="flex-1 text-xs border-b outline-none"
+                />
+              </div>
+              <div class="flex flex-wrap mt-2">
+                <button
+                  onclick="appendReason('r_fluency','台風穩健')"
+                  class="btn-pos"
+                >
+                  台風穩健
+                </button>
+                <button
+                  onclick="appendReason('r_fluency','表達流利')"
+                  class="btn-pos"
+                >
+                  表達流利
+                </button>
+                <button
+                  onclick="appendReason('r_fluency','過度唸稿')"
+                  class="btn-neg"
+                >
+                  過度唸稿
+                </button>
+                <button
+                  onclick="appendReason('r_fluency','語速過快')"
+                  class="btn-neg"
+                >
+                  語速過快
+                </button>
+              </div>
+            </div>
+
+            <div class="dimension-card">
+              <label class="block text-xs font-bold text-slate-500 mb-1"
+                >提問應答 (1-5)</label
+              >
+              <div class="flex gap-2">
+                <select
+                  id="v_qa"
+                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
+                >
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3" selected>3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
+                </select>
+                <input
+                  type="text"
+                  id="r_qa"
+                  oninput="syncToOverall()"
+                  placeholder="[本項評語]可輸入文字,自動彙整中..."
+                  class="flex-1 text-xs border-b outline-none"
+                />
+              </div>
+              <div class="flex flex-wrap mt-2">
+                <button
+                  onclick="appendReason('r_qa','切中要領')"
+                  class="btn-pos"
+                >
+                  切中要領
+                </button>
+                <button
+                  onclick="appendReason('r_qa','邏輯嚴密')"
+                  class="btn-pos"
+                >
+                  邏輯嚴密
+                </button>
+                <button
+                  onclick="appendReason('r_qa','回覆模糊')"
+                  class="btn-neg"
+                >
+                  回覆模糊
+                </button>
+                <button
+                  onclick="appendReason('r_qa','概念錯誤')"
+                  class="btn-neg"
+                >
+                  概念錯誤
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <label class="block text-xs font-bold text-blue-800 mb-1"
+                >專業原始分 (0-100)</label
+              >
+              <input
+                type="number"
+                id="profRaw"
+                class="w-full p-2 text-2xl font-black rounded-lg border-2 outline-none focus:border-blue-500"
+                oninput="calcTotal()"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <h3 class="font-bold text-green-700 border-b pb-2">
+              B. 技術性評分 (30%)
+            </h3>
+            <div class="dimension-card" style="border-left-color: #22c55e">
+              <label class="block text-xs font-bold text-slate-500 mb-1"
+                >時間掌控 (1-5)</label
+              >
+              <div class="flex gap-2">
+                <select
+                  id="v_time"
+                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
+                >
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3" selected>3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
+                </select>
+                <input
+                  type="text"
+                  id="r_time"
+                  oninput="syncToOverall()"
+                  placeholder="[本項評語]可輸入文字,自動彙整中..."
+                  class="flex-1 text-xs border-b outline-none"
+                />
+              </div>
+              <div class="flex flex-wrap mt-2">
+                <button
+                  onclick="appendReason('r_time','掌握精準')"
+                  class="btn-pos"
+                >
+                  掌握精準
+                </button>
+                <button
+                  onclick="appendReason('r_time','報告超時')"
+                  class="btn-neg"
+                >
+                  報告超時
+                </button>
+              </div>
+            </div>
+
+            <div class="dimension-card" style="border-left-color: #22c55e">
+              <label class="block text-xs font-bold text-slate-500 mb-1"
+                >服儀儀態 (1-5)</label
+              >
+              <div class="flex gap-2">
+                <select
+                  id="v_outfit"
+                  class="border rounded p-1 text-sm bg-slate-50 w-16 font-bold"
+                >
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3" selected>3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
+                </select>
+                <input
+                  type="text"
+                  id="r_outfit"
+                  oninput="syncToOverall()"
+                  placeholder="[本項評語]可輸入文字,自動彙整中..."
+                  class="flex-1 text-xs border-b outline-none"
+                />
+              </div>
+              <div class="flex flex-wrap mt-2">
+                <button
+                  onclick="appendReason('r_outfit','專業莊重')"
+                  class="btn-pos"
+                >
+                  專業莊重
+                </button>
+                <button
+                  onclick="appendReason('r_outfit','建議正式')"
+                  class="btn-neg"
+                >
+                  建議正式
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+              <label class="block text-xs font-bold text-green-800 mb-1"
+                >技術原始分 (0-100)</label
+              >
+              <input
+                type="number"
+                id="techRaw"
+                class="w-full p-2 text-2xl font-black rounded-lg border-2 outline-none focus:border-green-500"
+                oninput="calcTotal()"
+              />
+            </div>
+
+            <div class="p-4 bg-slate-100 rounded-xl border mt-8">
+              <label class="block text-sm font-bold text-blue-900 mb-2"
+                >● 委員總結建議 (自動彙整)：</label
+              >
+              <textarea
+                id="judgeComment"
+                class="w-full p-3 text-sm border-2 rounded-xl h-40 outline-none focus:border-blue-500 shadow-inner leading-relaxed"
+                placeholder="彙整中..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="mt-8 flex justify-between items-center bg-slate-900 text-white p-8 rounded-3xl shadow-2xl"
+        >
+          <div>
+            加權總成績：<span
+              id="finalScoreDisplay"
+              class="text-6xl font-black text-yellow-400"
+              >0</span
+            >分
+          </div>
+          <button
+                onclick="deleteGradingFromCloud()"
+                class="bg-red-600 px-8 py-4 rounded-2xl font-bold text-xl hover:bg-red-700 transition shadow-lg"
+              >
+                刪除紀錄
+              </button>
+
+          <button
+            onclick="submitGradingToCloud()"
+            class="bg-blue-600 px-16 py-4 rounded-2xl font-black text-2xl hover:bg-white hover:text-blue-900 transition shadow-xl"
+          >
+            送出評分
+          </button>
+        </div>
+      </section>
+
+      <section
+        id="adminDashboard"
+        class="hidden bg-white rounded-3xl shadow-xl p-8"
+      >
+        <div class="flex gap-6 border-b-2 mb-8">
+          <button
+            onclick="toggleAdminTab('venue')"
+            id="tab-btn-venue"
+            class="admin-tab active pb-4 px-2"
+          >
+            場地與委員
+          </button>
+          <button
+            onclick="toggleAdminTab('student')"
+            id="tab-btn-student"
+            class="admin-tab pb-4 px-2"
+          >
+            名單匯入 (Excel)
+          </button>
+        </div>
+        <div id="admin-venue" class="admin-content space-y-6">
+          <div
+            id="venueConfigContainer"
+            class="grid grid-cols-1 md:grid-cols-2 gap-6"
+          ></div>
+          <div class="flex gap-4">
+            <button
+              onclick="saveAdminConfig()"
+              class="flex-1 bg-blue-900 text-white py-3 rounded-xl font-bold"
+            >
+              儲存場地配置
+            </button>
+            <button
+              onclick="exportAllScores()"
+              class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold"
+            >
+              📊 匯出成績 Excel
+            </button>
+          </div>
+        </div>
+        <div id="admin-student" class="admin-content hidden space-y-6">
+          <div
+            class="p-6 border-2 border-dashed rounded-2xl bg-slate-50 flex justify-between items-center"
+          >
+            <input
+              type="file"
+              onchange="handleExcelImport(this)"
+              class="text-sm"
+            />
+            <button
+              onclick="clearStudentsCloud()"
+              class="bg-red-50 text-red-600 px-6 py-2 rounded-xl border border-red-200"
+            >
+              清空名單
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table id="adminStudentTable" class="w-full border-collapse block md:table">
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Firebase 配置
+      const firebaseConfig = {
+        apiKey: "AIzaSyBNa3SAk7yqzRjPyYuKZyLIJesm6M7c57w",
+        authDomain: "cme-seminar2026.firebaseapp.com",
+        projectId: "cme-seminar2026",
+        storageBucket: "cme-seminar2026.firebasestorage.app",
+        messagingSenderId: "61658181836",
+        appId: "1:61658181836:web:6c8d964c66512575dc9269",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      let students = [];
+      let scores = [];
+      let venueConfig = {
+        A1: { room: "", judges: ["", ""] },
+        A2: { room: "", judges: ["", ""] },
+        B1: { room: "", judges: ["", ""] },
+        B2: { room: "", judges: ["", ""] },
+      };
+      const venues = ["A1", "A2", "B1", "B2"];
+      let currentUser = null;
+      let activeStudent = null;
+
+window.onload = async () => {
+  toggleLoading(true); // 開啟遮罩
+  
+  try {
+    // 1. 初始化後台介面內容
+    const container = document.getElementById("venueConfigContainer");
+    container.innerHTML = venues.map(v => `
+      <div class="p-5 border rounded-2xl bg-slate-50">
+        <div class="flex gap-2 mb-4">
+          <span class="bg-blue-900 text-white px-3 py-1 rounded font-bold">${v}</span>
+          <input type="text" id="vRoom_${v}" placeholder="場地名稱" class="flex-1 border-b bg-transparent outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" id="vJudge_${v}_1" placeholder="評審1" class="p-2 border rounded text-xs">
+          <input type="text" id="vPwd_${v}_1" placeholder="密碼1" class="p-2 border rounded text-xs">
+          <input type="text" id="vJudge_${v}_2" placeholder="評審2" class="p-2 border rounded text-xs">
+          <input type="text" id="vPwd_${v}_2" placeholder="密碼2" class="p-2 border rounded text-xs">
+        </div>
+      </div>`).join("");
+
+    // 2. 從 Firebase 讀取設定
+    const configDoc = await db.collection("Settings").doc("VenueConfig").get();
+    if (configDoc.exists) {
+      venueConfig = configDoc.data();
+      venues.forEach((v) => {
+        if (venueConfig[v]) {
+          document.getElementById(`vRoom_${v}`).value = venueConfig[v].room || "";
+          document.getElementById(`vJudge_${v}_1`).value = venueConfig[v].judges[0] || "";
+          document.getElementById(`vJudge_${v}_2`).value = venueConfig[v].judges[1] || "";
+          if (venueConfig[v].passwords) {
+            document.getElementById(`vPwd_${v}_1`).value = venueConfig[v].passwords[0] || "";
+            document.getElementById(`vPwd_${v}_2`).value = venueConfig[v].passwords[1] || "";
+          }
+        }
+      });
+    }
+    updateVenueDropdown();
+
+    // 3. 設定即時監聽
+    db.collection("Students").onSnapshot(snap => {
+      students = snap.docs.map(doc => doc.data());
+      renderAdminList();
+      if (currentUser) renderStudentList();
+    });
+
+    db.collection("Scores").onSnapshot(snap => {
+      scores = snap.docs.map(doc => doc.data());
+      renderPublicResults();
+      if (currentUser) renderStudentList();
+    });
+
+  } catch (error) {
+    console.error("初始化出錯:", error);
+    alert("雲端資料同步失敗，請檢查連線");
+  } finally {
+    // 無論成功或出錯，最後一定執行
+    toggleLoading(false); 
+    showSection("publicResults");
+  }
+};
+
+
+      // 多欄位即時排行榜邏輯
+      function renderPublicResults() {
+        const container = document.getElementById("publicRankContainer");
+        container.innerHTML = venues
+          .map((v) => {
+            const room = venueConfig[v]?.room || "未設定";
+            const judges = venueConfig[v]?.judges || ["評審1", "評審2"];
+            const vScores = scores.filter((s) => s.venue === v);
+
+            const grouped = {};
+            vScores.forEach((s) => {
+              if (!grouped[s.studentId])
+                grouped[s.studentId] = {
+                  name: s.studentName,
+                  j1: "--",
+                  j2: "--",
+                  avg: 0,
+                  sum: 0,
+                  count: 0,
+                };
+              if (s.judge === judges[0]) grouped[s.studentId].j1 = s.total;
+              else if (s.judge === judges[1]) grouped[s.studentId].j2 = s.total;
+              grouped[s.studentId].sum += s.total;
+              grouped[s.studentId].count++;
+              grouped[s.studentId].avg = Math.round(
+                grouped[s.studentId].sum / grouped[s.studentId].count
+              );
+            });
+            const rank = Object.values(grouped).sort((a, b) => b.avg - a.avg);
+
+            return `
+            <div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900">
+              <h3 class="font-black text-xl mb-4 border-b pb-2 flex justify-between">
+                <span>${v} 場地 (${room})</span>
+                <span class="text-xs text-blue-500 animate-pulse">Live</span>
+              </h3>
+              <div class="space-y-3">
+                <div class="grid grid-cols-5 text-[10px] text-slate-400 font-bold px-2">
+                  <div class="col-span-2">學生姓名</div>
+                  <div class="text-center">評審1</div>
+                  <div class="text-center">評審2</div>
+                  <div class="text-right">平均</div>
+                </div>
+                ${
+                  rank.length
+                    ? rank
+                        .map(
+                          (r, i) => `
+                  <div class="grid grid-cols-5 items-center text-sm p-2 ${
+                    i === 0 ? "bg-yellow-50 rounded-lg" : ""
+                  }">
+                    <div class="col-span-2 font-bold text-slate-700">${
+                      i + 1
+                    }. ${r.name}</div>
+                    <div class="text-center font-mono text-xs text-slate-400">${
+                      r.j1
+                    }</div>
+                    <div class="text-center font-mono text-xs text-slate-400">${
+                      r.j2
+                    }</div>
+                    <div class="text-right font-black ${
+                      i === 0 ? "text-blue-700" : "text-slate-600"
+                    }">${r.avg}</div>
+                  </div>`
+                        )
+                        .join("")
+                    : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
+                }
+              </div>
+            </div>`;
+          })
+          .join("");
+      }
+
+// 開啟學生查詢頁面
+async function fetchStudentResult() {
+  const sid = document.getElementById("querySid").value.trim();
+  if (!sid) return alert("請輸入學號");
+
+  toggleLoading(true);
+  try {
+    // 從 Scores 集合中抓取該學號的所有評分資料
+    const snap = await db.collection("Scores").where("studentId", "==", sid).get();
+    
+    if (snap.empty) {
+      alert("尚未有評分紀錄，請確認學號是否正確或稍後再試。");
+      document.getElementById("queryResult").classList.add("hidden");
+    } else {
+      let totalSum = 0;
+      let html = "";
+      
+      snap.forEach(doc => {
+        const d = doc.data();
+        totalSum += d.total;
+        html += `
+          <div class="p-4 bg-white border rounded-xl shadow-sm text-sm">
+            <p class="font-bold text-blue-900 border-b pb-1 mb-2">評審建議：</p>
+            <p class="whitespace-pre-line text-slate-600 italic">${d.feedback_json.summary || "無具體評語"}</p>
+          </div>`;
+      });
+
+      document.getElementById("resAvg").innerText = Math.round(totalSum / snap.size);
+      document.getElementById("resDetails").innerHTML = html;
+      document.getElementById("queryResult").classList.remove("hidden");
+    }
+  } catch (e) {
+    alert("查詢出錯");
+  } finally {
+    toggleLoading(false);
+  }
+}
+
+
+
+
+      // 開啟評分頁面 (含回顯邏輯)
+      function openScoring(sid) {
+        activeStudent = students.find((s) => s.id === sid);
+        document.getElementById("scoringName").innerText = activeStudent.name;
+        document.getElementById("scoringTitle").innerText =
+          activeStudent.title || "";
+        document.getElementById("scoringAdvisor").innerText = `指導教授：${
+          activeStudent.advisor || "--"
+        }`;
+
+        const history = scores.find(
+          (sc) => sc.studentId === sid && sc.judge === currentUser.name
+        );
+        if (history) {
+          document.getElementById("profRaw").value = history.profRaw || "";
+          document.getElementById("techRaw").value = history.techRaw || "";
+          document.getElementById("judgeComment").value =
+            history.feedback_json?.summary || "";
+          document.getElementById("finalScoreDisplay").innerText =
+            history.total || "0";
+          if (history.details) {
+            ["content", "fluency", "qa", "time", "outfit"].forEach((key) => {
+              const d = history.details[key];
+              document.getElementById(`v_${key}`).value = d.score || "3";
+              document.getElementById(`r_${key}`).value = d.reason || "";
+            });
+          }
+        } else {
+          // 重置
+          [
+            "profRaw",
+            "techRaw",
+            "judgeComment",
+            "r_content",
+            "r_fluency",
+            "r_qa",
+            "r_time",
+            "r_outfit",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+          ["v_content", "v_fluency", "v_qa", "v_time", "v_outfit"].forEach(
+            (id) => (document.getElementById(id).value = "3")
+          );
+          document.getElementById("finalScoreDisplay").innerText = "0";
+        }
+        showSection("scoreSection");
+      }
+
+      async function deleteGradingFromCloud() {
+        // 1. 安全確認
+        if (!confirm(`確定要完全刪除對「${activeStudent.name}」的評分紀錄嗎？\n刪除後該生將恢復為「尚未評分」狀態。`)) return;
+
+        toggleLoading(true);
+        const docId = `${currentUser.name}_${activeStudent.id}`;
+
+        try {
+          // 2. 從 Firebase 刪除文件
+          await db.collection("Scores").doc(docId).delete();
+    
+          alert("紀錄已成功刪除");
+    
+          // 3. 重置目前的輸入欄位
+          [
+            "profRaw", "techRaw", "judgeComment",
+            "r_content", "r_fluency", "r_qa", "r_time", "r_outfit"
+          ].forEach(id => document.getElementById(id).value = "");
+    
+          ["v_content", "v_fluency", "v_qa", "v_time", "v_outfit"].forEach(
+            id => document.getElementById(id).value = "3"
+          );
+          document.getElementById("finalScoreDisplay").innerText = "0";
+
+          // 4. 返回場地清單
+          showSection("judgeDashboard");
+    
+        } catch (e) {
+          console.error(e);
+          alert("刪除失敗，請檢查網路連線");
+        } finally {
+          toggleLoading(false);
+        }
+      }
+
+
+
+      async function submitGradingToCloud() {
+        const p = document.getElementById("profRaw").value;
+        const t = document.getElementById("techRaw").value;
+        if (p === "" || t === "") return alert("請輸入 0-100 分數");
+        toggleLoading(true);
+        const docId = `${currentUser.name}_${activeStudent.id}`;
+        try {
+          await db
+            .collection("Scores")
+            .doc(docId)
+            .set({
+              judge: currentUser.name,
+              venue: currentUser.venue,
+              studentId: activeStudent.id,
+              studentName: activeStudent.name,
+              total: parseInt(
+                document.getElementById("finalScoreDisplay").innerText
+              ),
+              profRaw: parseInt(p),
+              techRaw: parseInt(t),
+              details: {
+                content: {
+                  score: document.getElementById("v_content").value,
+                  reason: document.getElementById("r_content").value,
+                },
+                fluency: {
+                  score: document.getElementById("v_fluency").value,
+                  reason: document.getElementById("r_fluency").value,
+                },
+                qa: {
+                  score: document.getElementById("v_qa").value,
+                  reason: document.getElementById("r_qa").value,
+                },
+                time: {
+                  score: document.getElementById("v_time").value,
+                  reason: document.getElementById("r_time").value,
+                },
+                outfit: {
+                  score: document.getElementById("v_outfit").value,
+                  reason: document.getElementById("r_outfit").value,
+                },
+              },
+              feedback_json: {
+                summary: document.getElementById("judgeComment").value,
+              },
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+          alert("評分成功！");
+          showSection("judgeDashboard");
+        } catch (e) {
+          alert("儲存失敗");
+        }
+        toggleLoading(false);
+      }
+
+      function syncToOverall() {
+        const map = [
+          { id: "r_content", label: "內容" },
+          { id: "r_fluency", label: "流暢" },
+          { id: "r_qa", label: "應答" },
+          { id: "r_time", label: "時間" },
+          { id: "r_outfit", label: "服儀" },
+        ];
+        document.getElementById("judgeComment").value = map
+          .map((item) => {
+            const val = document.getElementById(item.id).value.trim();
+            return val ? `【${item.label}】${val}` : "";
+          })
+          .filter((s) => s !== "")
+          .join("\n");
+      }
+
+      function calcTotal() {
+        const p = parseFloat(document.getElementById("profRaw").value) || 0;
+        const t = parseFloat(document.getElementById("techRaw").value) || 0;
+        document.getElementById("finalScoreDisplay").innerText = Math.round(
+          p * 0.7 + t * 0.3
+        );
+      }
+
+      function appendReason(id, text) {
+        const el = document.getElementById(id);
+        if (!el.value.includes(text)) el.value += (el.value ? "、" : "") + text;
+        syncToOverall();
+      }
+
+      // 管理與工具
+      function judgeLogin() {
+        const v = document.getElementById("jVenue").value;
+        const n = document.getElementById("jName").value.trim();
+        const p = document.getElementById("jPassword").value.trim(); // 取得輸入密碼
+
+        if (!n || !p) return alert("請輸入完整姓名與密碼");
+        // 取得該場地配置資訊
+          const config = venueConfig[v];
+  
+          // 找出該姓名在評審陣列中的索引 (0 或 1)
+          const judgeIndex = config.judges.indexOf(n);
+
+          // 驗證邏輯：姓名必須存在，且對應位置的密碼必須正確
+          if (judgeIndex !== -1 && config.passwords && config.passwords[judgeIndex] === p) {
+            currentUser = { name: n, venue: v, room: config.room };
+            document.getElementById("displayVenue").innerText = `${v} 場地清單`;
+            document.getElementById("displayRoom").innerText = `教室：${currentUser.room}`;
+            document.getElementById("displayJudge").innerText = `評審：${n}`;
+            showSection("judgeDashboard");
+            renderStudentList();
+          } else {
+            alert("姓名或密碼錯誤，請重新輸入");
+          }
+        }
+
+
+      function renderStudentList() {
+        const container = document.getElementById("studentListContainer");
+        const filtered = students.filter((s) => s.venue === currentUser.venue);
+        container.innerHTML = filtered
+          .map((s) => {
+            const isDone = scores.some(
+              (sc) => sc.studentId === s.id && sc.judge === currentUser.name
+            );
+            return `<div onclick="openScoring('${
+              s.id
+            }')" class="flex items-center p-4 border-b hover:bg-slate-50 cursor-pointer">
+              <div class="flex-1">
+                <p class="text-[10px] font-mono text-slate-400">${s.id}</p>
+                <h3 class="font-bold text-lg">${s.name}</h3>
+                <p class="text-xs text-slate-500 truncate">${s.title || ""}</p>
+              </div>
+              ${
+                isDone
+                  ? '<span class="checkmark">✔ 已完成</span>'
+                  : '<span class="text-xs text-slate-300">尚未評分</span>'
+              }
+            </div>`;
+          })
+          .join("");
+      }
+
+      async function saveAdminConfig() {
+        venues.forEach((v) => {
+          venueConfig[v] = {
+            room: document.getElementById(`vRoom_${v}`).value,
+            judges: [
+              document.getElementById(`vJudge_${v}_1`).value,
+              document.getElementById(`vJudge_${v}_2`).value,
+            ],
+            passwords: [ // 增加儲存密碼陣列
+              document.getElementById(`vPwd_${v}_1`).value,
+              document.getElementById(`vPwd_${v}_2`).value,
+            ],
+          };
+        });
+        await db.collection("Settings").doc("VenueConfig").set(venueConfig);
+        alert("雲端同步成功");
+        updateVenueDropdown();
+        renderPublicResults();
+      }
+
+      function exportAllScores() {
+        const data = scores.map((s) => ({
+          場地: s.venue,
+          評審: s.judge,
+          學生: s.studentName,
+          學號: s.studentId,
+          專業分: s.profRaw,
+          技術分: s.techRaw,
+          加權總分: s.total,
+          評語: s.feedback_json.summary,
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Scores");
+        XLSX.writeFile(
+          wb,
+          `淡江化材研討會成績_${new Date().toLocaleDateString()}.xlsx`
+        );
+      }
+
+      async function handleExcelImport(input) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const data = XLSX.read(new Uint8Array(e.target.result), {
+            type: "array",
+          });
+          const json = XLSX.utils.sheet_to_json(
+            data.Sheets[data.SheetNames[0]],
+            { header: 1 }
+          );
+          const batch = db.batch();
+          json.slice(1).forEach((r) => {
+            if (r[0])
+              batch.set(db.collection("Students").doc(String(r[0])), {
+                id: String(r[0]),
+                name: r[1],
+                advisor: r[2],
+                title: r[3],
+                venue: r[4] ? String(r[4]).toUpperCase().trim() : "未分配",
+              });
+          });
+          await batch.commit();
+          alert("匯入成功");
+        };
+        reader.readAsArrayBuffer(input.files[0]);
+      }
+
+      function enterAdmin() {
+        if (prompt("請輸入管理密碼,提示t???2??4") === "tedx2614")
+          showSection("adminDashboard");
+      }
+      function clearStudentsCloud() {
+        if (confirm("確定清空？"))
+          db.collection("Students")
+            .get()
+            .then((qs) => {
+              const b = db.batch();
+              qs.forEach((d) => b.delete(d.ref));
+              b.commit();
+            });
+      }
+      function toggleLoading(s) {
+        document.getElementById("loading").classList.toggle("hidden", !s);
+      }
+      function showSection(id) {
+        document
+          .querySelectorAll("main > section")
+          .forEach((s) => s.classList.add("hidden"));
+        document.getElementById(id).classList.remove("hidden");
+        window.scrollTo(0, 0);
+      }
+      function toggleAdminTab(t) {
+        document
+          .querySelectorAll(".admin-content")
+          .forEach((c) => c.classList.add("hidden"));
+        document
+          .querySelectorAll(".admin-tab")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(`admin-${t}`).classList.remove("hidden");
+        document.getElementById(`tab-btn-${t}`).classList.add("active");
+      }
+      function updateVenueDropdown() {
+        document.getElementById("jVenue").innerHTML = venues
+          .map(
+            (v) =>
+              `<option value="${v}">${v} 場地 (${
+                venueConfig[v].room || ""
+              })</option>`
           )
           .join("");
       }
 
-      async function fetchConfig() {
-        const snap = await getDoc(doc(db, "config", "meeting_2026"));
-        if (snap.exists()) {
-          systemConfig = snap.data();
-          venues.forEach((v) => {
-            const d = systemConfig[`venue${v}`] || {};
-            document.getElementById(`conf-venue${v}-name`).value = d.name || "";
-            document.getElementById(`conf-venue${v}-j1`).value = d.j1 || "";
-            document.getElementById(`conf-venue${v}-j2`).value = d.j2 || "";
-          });
-          document.getElementById("judge-venue").innerHTML = venues
-            .map(
-              (v) =>
-                `<option value="${v}">${
-                  systemConfig[`venue${v}`]?.name || v
-                }</option>`
-            )
-            .join("");
-          updateJudgeOptions();
-        }
+
+      function renderAdminList() {
+        const tableBody = document.getElementById("adminStudentTable");
+
+        // 1. 表頭：在手機端隱藏 (hidden)，中視窗以上顯示 (md:table-header-group)
+        const header = `
+          <thead class="hidden md:table-header-group bg-slate-100 font-bold">
+            <tr>
+              <td class="p-3 border">學號 (ID)</td>
+              <td class="p-3 border">姓名</td>
+              <td class="p-3 border">指導教授</td>
+              <td class="p-3 border">論文題目</td>
+              <td class="p-3 border text-center">場地</td>
+            </tr>
+          </thead>`;
+
+        // 2. 資料列：手機端轉為卡片 (block + shadow)，中視窗以上恢復為表格列 (md:table-row)
+        const rows = students.map((s) => `
+          <tr class="block md:table-row mb-4 md:mb-0 bg-white border md:border-b shadow-sm md:shadow-none rounded-xl md:rounded-none p-4 md:p-0">
+      
+            <td data-label="學號" class="block md:table-cell p-1 md:p-3 text-xs font-mono text-slate-500 md:text-slate-900 
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.id}
+            </td>
+      
+            <td data-label="姓名" class="block md:table-cell p-1 md:p-3 font-bold text-lg md:text-base
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.name}
+            </td>
+      
+            <td data-label="指導教授" class="block md:table-cell p-1 md:p-3 text-sm
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.advisor || "--"}
+            </td>
+      
+            <td data-label="論文題目" class="block md:table-cell p-1 md:p-3 text-xs text-slate-600
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              ${s.title || "--"}
+            </td>
+      
+            <td data-label="場地" class="block md:table-cell p-1 md:p-3 text-left md:text-center
+              before:content-[attr(data-label)] before:md:hidden before:font-bold before:mr-2 before:text-slate-400">
+              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold inline-block mt-1 md:mt-0">
+                ${s.venue}
+              </span>
+            </td>
+      
+          </tr>
+        `).join("");
+
+        tableBody.innerHTML = header + `<tbody class="block md:table-row-group">${rows}</tbody>`;
       }
-
-      window.saveConfig = async () => {
-        const cfg = { access_key: userSecret }; // 帶入密碼
-        venues.forEach((v) => {
-          cfg[`venue${v}`] = {
-            name: document.getElementById(`conf-venue${v}-name`).value,
-            j1: document.getElementById(`conf-venue${v}-j1`).value,
-            j2: document.getElementById(`conf-venue${v}-j2`).value,
-          };
-        });
-        try {
-          await setDoc(doc(db, "config", "meeting_2026"), cfg);
-          alert("系統設定已儲存");
-          location.reload();
-        } catch (e) {
-          alert("儲存失敗：密碼錯誤或權限不足。");
-        }
-      };
-
-      window.importExcel = function () {
-        const file = document.getElementById("excel-file").files[0];
-        if (!file) return alert("請先選擇檔案");
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const wb = XLSX.read(new Uint8Array(e.target.result), {
-            type: "array",
-          });
-          const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-          let count = 0;
-          for (const row of data) {
-            try {
-              await setDoc(doc(db, "students", String(row["學號"])), {
-                access_key: userSecret, // 帶入密碼
-                sid: String(row["學號"]),
-                name: row["姓名"],
-                title: row["論文題目"],
-                advisor: row["指導老師"],
-                venue: row["場地"],
-                j1_a: 0,
-                j1_b: 0,
-                j1_comm: "",
-                j1_total: 0,
-                j2_a: 0,
-                j2_b: 0,
-                j2_comm: "",
-                j2_total: 0,
-              });
-              count++;
-            } catch (err) {
-              return alert("匯入中斷：密碼錯誤。");
-            }
-          }
-          alert(`成功匯入 ${count} 筆學生資料`);
-          location.reload();
-        };
-        reader.readAsArrayBuffer(file);
-      };
-
-      window.submitDetailedScore = async (sid) => {
-        const a = parseFloat(document.getElementById(`a-${sid}`).value) || 0;
-        const b = parseFloat(document.getElementById(`b-${sid}`).value) || 0;
-        const jType = document.getElementById("judge-id").value;
-        const checkedBoxes = document.querySelectorAll(
-          `.comm-check-${sid}:checked`
-        );
-        let finalComm = Array.from(checkedBoxes)
-          .map((cb) => cb.value)
-          .join("\n");
-        const manualText = document
-          .getElementById(`c-text-${sid}`)
-          .value.trim();
-        if (manualText) finalComm += (finalComm ? "\n" : "") + manualText;
-        const total = Math.round(a * 0.7 + b * 0.3);
-
-        const updates = { access_key: userSecret }; // 帶入密碼
-        updates[`${jType}_a`] = a;
-        updates[`${jType}_b`] = b;
-        updates[`${jType}_comm`] = finalComm;
-        updates[`${jType}_total`] = total;
-
-        try {
-          await updateDoc(doc(db, "students", sid), updates);
-          document.getElementById(`done-${sid}`).classList.remove("hidden");
-          console.log(`${sid} saved`);
-        } catch (e) {
-          alert("無法儲存！請確認密碼是否正確。");
-        }
-      };
-
-      // --- 介面控制邏輯 ---
-      window.updateJudgeOptions = () => {
-        const v = document.getElementById("judge-venue").value;
-        const d = systemConfig[`venue${v}`] || { j1: "未設定", j2: "未設定" };
-        document.getElementById(
-          "judge-id"
-        ).innerHTML = `<option value="j1">委員：${d.j1}</option><option value="j2">委員：${d.j2}</option>`;
-      };
-
-      window.loadStudentList = async () => {
-        const venue = document.getElementById("judge-venue").value;
-        const jType = document.getElementById("judge-id").value;
-        const container = document.getElementById("student-list");
-        container.innerHTML =
-          "<p class='text-center py-10 opacity-50 text-sm'>正在從雲端讀取名單...</p>";
-
-        const q = query(
-          collection(db, "students"),
-          where("venue", "==", venue)
-        );
-        const snap = await getDocs(q);
-        container.innerHTML = "";
-
-        if (snap.empty) {
-          container.innerHTML =
-            "<p class='text-center py-10 text-slate-400'>此場地目前無學生資料。</p>";
-          return;
-        }
-
-        snap.forEach((d) => {
-          const s = d.data();
-          const currentComm = s[`${jType}_comm`] || "";
-          let chipHtml = "";
-          for (const [cat, sub] of Object.entries(commentOptions)) {
-            chipHtml += `<div class="mb-4"><h4 class="text-xs font-black text-slate-400 mb-2 uppercase">${cat}</h4>`;
-            for (const [title, options] of Object.entries(sub)) {
-              chipHtml += `<p class="text-[10px] font-bold text-slate-500 mb-1">● ${title}</p><div class="chip-container mb-3">`;
-              options.pros.forEach(
-                (p) =>
-                  (chipHtml += `<label class="chip-item pro"><input type="checkbox" class="comm-check-${
-                    s.sid
-                  } hidden" value="${p}" ${
-                    currentComm.includes(p) ? "checked" : ""
-                  }> <span class="chip-label text-xs">${p}</span></label>`)
-              );
-              options.cons.forEach(
-                (c) =>
-                  (chipHtml += `<label class="chip-item con"><input type="checkbox" class="comm-check-${
-                    s.sid
-                  } hidden" value="${c}" ${
-                    currentComm.includes(c) ? "checked" : ""
-                  }> <span class="chip-label text-xs">${c}</span></label>`)
-              );
-              chipHtml += `</div>`;
-            }
-            chipHtml += `</div>`;
-          }
-
-          const div = document.createElement("div");
-          div.className =
-            "bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4";
-          div.innerHTML = `
-            <div class="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
-                  <h3 class="text-lg font-black">${
-                    s.name
-                  }</h3><span class="text-xs text-slate-400">#${s.sid}</span>
-                  <div id="done-${s.sid}" class="${
-            s[`${jType}_total`] > 0 ? "" : "hidden"
-          } text-green-500"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
-                </div>
-                <p class="text-xs text-slate-500">${s.advisor} | ${s.title}</p>
-              </div>
-              <div class="flex gap-2">
-                <div class="w-24"><label class="score-label">專業(70%)</label><input type="number" id="a-${
-                  s.sid
-                }" value="${
-            s[`${jType}_a`] || ""
-          }" class="font-bold text-blue-600"></div>
-                <div class="w-24"><label class="score-label">技術(30%)</label><input type="number" id="b-${
-                  s.sid
-                }" value="${
-            s[`${jType}_b`] || ""
-          }" class="font-bold text-indigo-600"></div>
-                <div class="flex items-end"><button onclick="submitDetailedScore('${
-                  s.sid
-                }')" class="bg-blue-600 text-white h-[42px] px-4 rounded-lg font-bold">儲存</button></div>
-              </div>
-            </div>
-            <details class="group border-t border-slate-100">
-              <summary class="flex justify-between items-center px-5 py-3 bg-slate-50/50 cursor-pointer">
-                <span class="text-xs font-bold text-slate-500">詳細評語與建議</span>
-                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
-              </summary>
-              <div class="p-5 bg-white">
-                ${chipHtml}
-                <textarea id="c-text-${
-                  s.sid
-                }" rows="2" class="text-sm mt-4" placeholder="其他建議...">${extractManualText(
-            currentComm
-          )}</textarea>
-                <button onclick="submitDetailedScore('${
-                  s.sid
-                }')" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-4">儲存評語</button>
-              </div>
-            </details>
-          `;
-          container.appendChild(div);
-        });
-        lucide.createIcons();
-      };
-
-      function extractManualText(fullText) {
-        if (!fullText) return "";
-        let text = fullText;
-        Object.values(commentOptions).forEach((cat) => {
-          Object.values(cat).forEach((opt) => {
-            [...opt.pros, ...opt.cons].forEach(
-              (p) => (text = text.replace(p, ""))
-            );
-          });
-        });
-        return text.trim();
-      }
-
-      window.loadResults = async () => {
-        const container = document.getElementById("result-container");
-        container.innerHTML = "<p class='opacity-50'>彙整中...</p>";
-        const snap = await getDocs(collection(db, "students"));
-        const list = [];
-        snap.forEach((d) => list.push(d.data()));
-        container.innerHTML = venues
-          .map((v) => {
-            const sorted = list
-              .filter((s) => s.venue === v)
-              .map((s) => ({
-                ...s,
-                avg: (((s.j1_total || 0) + (s.j2_total || 0)) / 2).toFixed(1),
-              }))
-              .sort((a, b) => b.avg - a.avg);
-            return `<div class="admin-card p-6">
-            <h2 class="font-black mb-4 border-b pb-2 text-slate-700">${
-              systemConfig[`venue${v}`]?.name || "場次 " + v
-            }</h2>
-            ${sorted
-              .map(
-                (s, i) =>
-                  `<div class="flex justify-between py-2 text-sm border-b border-slate-50"><span>${
-                    i + 1
-                  }. ${s.name}</span><span class="font-bold text-blue-600">${
-                    s.avg
-                  }</span></div>`
-              )
-              .join("")}
-          </div>`;
-          })
-          .join("");
-      };
-
-      window.exportFullReport = async () => {
-        const snap = await getDocs(collection(db, "students"));
-        const data = [];
-        snap.forEach((d) => {
-          const s = d.data();
-          data.push({
-            學號: s.sid,
-            姓名: s.name,
-            場地: s.venue,
-            評審1: s.j1_total,
-            評審2: s.j2_total,
-            平均: ((s.j1_total + s.j2_total) / 2).toFixed(1),
-            評語1: s.j1_comm,
-            評語2: s.j2_comm,
-          });
-        });
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "成績");
-        XLSX.writeFile(wb, "2026化材研討會總表.xlsx");
-      };
-
-      window.showView = (v) => {
-        document
-          .querySelectorAll(".view-section")
-          .forEach((e) => e.classList.add("hidden"));
-        document
-          .querySelectorAll(".nav-btn")
-          .forEach((b) => b.classList.remove("active"));
-        document.getElementById("view-" + v).classList.remove("hidden");
-        document.getElementById("nav-" + v).classList.add("active");
-        if (v === "judge") loadStudentList();
-        if (v === "assistant") loadResults();
-      };
     </script>
   </body>
 </html>
