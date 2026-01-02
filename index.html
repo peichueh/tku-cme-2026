@@ -674,6 +674,74 @@
         }
       };
 
+// 渲染評審看到的學生清單
+function renderStudentList() {
+  if (!currentUser) return;
+  const container = document.getElementById("studentListContainer");
+  
+  // 1. 過濾出屬於該場地的學生
+  const venueStudents = students.filter((s) => s.venue === currentUser.venue);
+
+  if (venueStudents.length === 0) {
+    container.innerHTML = `
+      <div class="p-20 text-center text-slate-400">
+        <p class="text-4xl mb-4">📭</p>
+        <p>目前此場地 (${currentUser.venue}) 尚無學生名單</p>
+      </div>`;
+    return;
+  }
+
+  // 2. 產生成績列表 HTML
+  container.innerHTML = venueStudents.map((s) => {
+    // 檢查目前登入的評審是否已經評過這位學生
+    const history = scores.find(
+      (sc) => sc.studentId === s.id && sc.judge === currentUser.name
+    );
+    const isScored = !!history;
+
+    return `
+      <div class="flex flex-col md:flex-row items-center justify-between p-6 border-b last:border-0 hover:bg-slate-50 transition-colors">
+        <div class="flex-1 w-full">
+          <div class="flex items-center gap-3 mb-1">
+            <h3 class="text-xl font-black text-slate-800">${s.name}</h3>
+            <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">${s.id}</span>
+            ${isScored 
+              ? '<span class="checkmark flex items-center gap-1">✅ <span class="text-xs">已完成評分</span></span>' 
+              : '<span class="text-orange-500 text-xs font-bold animate-pulse">● 待評分</span>'
+            }
+          </div>
+          <div class="space-y-1">
+            <p class="text-xs text-blue-700 font-bold">指導教授：${s.advisor || "未填寫"}</p>
+            <p class="text-sm text-slate-500 italic truncate max-w-md md:max-w-2xl" title="${s.title || ""}">
+              ${s.title || "尚未設定論文題目"}
+            </p>
+          </div>
+        </div>
+        
+        <div class="mt-4 md:mt-0 w-full md:w-auto flex items-center gap-4">
+          ${isScored ? `<div class="text-right hidden md:block">
+            <p class="text-[10px] text-slate-400 font-bold uppercase">Your Score</p>
+            <p class="text-2xl font-black text-blue-900">${history.total}</p>
+          </div>` : ''}
+          
+          <button
+            onclick="openScoring('${s.id}')"
+            class="w-full md:w-auto px-8 py-3 rounded-xl font-black transition-all transform active:scale-95 ${
+              isScored
+                ? "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200"
+                : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5"
+            }"
+          >
+            ${isScored ? "修改成績" : "進入評分"}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+
+
       function renderAdminConfigUI() {
         document.getElementById("venueConfigContainer").innerHTML = venues
           .map(
