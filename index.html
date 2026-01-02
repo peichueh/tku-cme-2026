@@ -767,6 +767,7 @@
         }
       }
 
+            // 開啟評分頁面 (含回顯邏輯)
       function openScoring(sid) {
         activeStudent = students.find((s) => s.id === sid);
         document.getElementById("scoringName").innerText = activeStudent.name;
@@ -779,19 +780,6 @@
         const history = scores.find(
           (sc) => sc.studentId === sid && sc.judge === currentUser.name
         );
-        // 重置所有欄位
-        [
-          "profRaw",
-          "techRaw",
-          "judgeComment",
-          "r_content",
-          "r_fluency",
-          "r_qa",
-          "r_time",
-          "r_outfit",
-        ].forEach((id) => (document.getElementById(id).value = ""));
-        document.getElementById("finalScoreDisplay").innerText = "0";
-
         if (history) {
           document.getElementById("profRaw").value = history.profRaw || "";
           document.getElementById("techRaw").value = history.techRaw || "";
@@ -800,26 +788,62 @@
           document.getElementById("finalScoreDisplay").innerText =
             history.total || "0";
           if (history.details) {
-            ["content", "fluency", "qa", "time", "outfit"].forEach((k) => {
-              if (history.details[k])
-                document.getElementById(`r_${k}`).value =
-                  history.details[k].reason || "";
+            ["content", "fluency", "qa", "time", "outfit"].forEach((key) => {
+              const d = history.details[key];
+              document.getElementById(`r_${key}`).value = d.reason || "";
             });
           }
+        } else {
+          // 重置
+          [
+            "profRaw",
+            "techRaw",
+            "judgeComment",
+            "r_content",
+            "r_fluency",
+            "r_qa",
+            "r_time",
+            "r_outfit",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+          ["v_content", "v_fluency", "v_qa", "v_time", "v_outfit"].forEach(
+            (id) => (document.getElementById(id).value = "3")
+          );
+          document.getElementById("finalScoreDisplay").innerText = "0";
         }
         showSection("scoreSection");
       }
 
+
       async function deleteGradingFromCloud() {
-        if (!confirm("確定刪除此生評分紀錄？")) return;
+        // 1. 安全確認
+        if (!confirm(`確定要完全刪除對「${activeStudent.name}」的評分紀錄嗎？\n刪除後該生將恢復為「尚未評分」狀態。`)) return;
+
         toggleLoading(true);
+        const docId = `${currentUser.name}_${activeStudent.id}`;
+
         try {
-          await db
-            .collection("Scores")
-            .doc(`${currentUser.name}_${activeStudent.id}`)
-            .delete();
-          alert("已刪除");
+          // 2. 從 Firebase 刪除文件
+          await db.collection("Scores").doc(docId).delete();
+    
+          alert("紀錄已成功刪除");
+    
+          // 3. 重置目前的輸入欄位
+          [
+            "profRaw", "techRaw", "judgeComment",
+            "r_content", "r_fluency", "r_qa", "r_time", "r_outfit"
+          ].forEach(id => document.getElementById(id).value = "");
+    
+          ["v_content", "v_fluency", "v_qa", "v_time", "v_outfit"].forEach(
+            id => document.getElementById(id).value = "3"
+          );
+          document.getElementById("finalScoreDisplay").innerText = "0";
+
+          // 4. 返回場地清單
           showSection("judgeDashboard");
+    
+        } catch (e) {
+          console.error(e);
+          alert("刪除失敗，請檢查網路連線");
         } finally {
           toggleLoading(false);
         }
