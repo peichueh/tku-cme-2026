@@ -170,9 +170,11 @@
         class="hidden max-w-md mx-auto bg-white p-10 mt-12 rounded-3xl shadow-2xl border"
       >
         <h2 class="text-2xl font-black mb-8 text-center text-slate-800">
-          評審登入(請輸入人員代號)
+          評審登入
         </h2>
         <div class="space-y-6">
+          <select id="jVenue" class="w-full p-3 border-2 rounded-xl bg-slate-50 outline-none focus:border-blue-500"></select>
+          <input type="text" id="jName" class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500" placeholder="請輸入評審姓名" />
           <input
             type="password"
             id="jPassword"
@@ -654,6 +656,9 @@
             venueConfig = configDoc.data();
           }
           renderAdminConfigUI();
+          renderVenueSelect();// <--- 加入這行
+    
+    // ... 原本的 snapshot 監聽程式碼 ...
 
           db.collection("Students").onSnapshot((snap) => {
             students = snap.docs.map((doc) => doc.data());
@@ -701,7 +706,11 @@
           .join("");
       }
 
+     //評審登入
       function judgeLogin() {
+        const v = document.getElementById("jVenue").value;
+        const n = document.getElementById("jName").value.trim();
+        if (!n || !venueConfig[v].judges.includes(n)) return alert("姓名不在該場地評審名單中");
         const p = document.getElementById("jPassword").value.trim();
         if (!p) return alert("請輸入密碼");
         let found = null;
@@ -910,6 +919,7 @@
         await db.collection("Settings").doc("VenueConfig").set(venueConfig);
         alert("儲存成功");
       }
+
 
       // 多欄位即時排行榜邏輯
       function renderPublicResults() {
@@ -1131,7 +1141,7 @@
         document.getElementById("loading").classList.toggle("hidden", !s);
       }
       function enterAdmin() {
-        if (prompt("請輸入管理密碼,提示t???2??4") === "tedx2614")
+        if (prompt("請輸入管理密碼,提示t~4") === "tedx2614")
           showSection("adminDashboard");
       }
       function clearStudentsCloud() {
@@ -1145,7 +1155,17 @@
             });
       }
 
-      function updateVenueDropdown() {} // 已改為密碼登入，此函數保留以防報錯
+function renderVenueSelect() {
+  const select = document.getElementById("jVenue");
+  if (!select) return;
+
+  // 遍歷 A1, A2, B1, B2 等場地
+  select.innerHTML = venues.map(v => {
+    // 取得該場地設定的教室名稱，若沒填寫則顯示場地編號
+    const roomName = venueConfig[v] && venueConfig[v].room ? venueConfig[v].room : `未設定教室`;
+    return `<option value="${v}">${roomName} (${v}場地)</option>`;
+  }).join("");
+}
     </script>
   </body>
 </html>
