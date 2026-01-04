@@ -171,10 +171,18 @@
       >
         <h2 class="text-2xl font-black mb-8 text-center text-slate-800">
           評審登入
-        </h2><br>評分截止時間（2026年1月13日 下午 4:00）<br>
+        </h2>
         <div class="space-y-6">
-          <select id="jVenue" class="w-full p-3 border-2 rounded-xl bg-slate-50 outline-none focus:border-blue-500"></select>
-          <input type="text" id="jName" class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500" placeholder="請輸入評審姓名" />
+          <select
+            id="jVenue"
+            class="w-full p-3 border-2 rounded-xl bg-slate-50 outline-none focus:border-blue-500"
+          ></select>
+          <input
+            type="text"
+            id="jName"
+            class="w-full p-3 border-2 rounded-xl outline-none focus:border-blue-500"
+            placeholder="請輸入評審姓名"
+          />
           <input
             type="password"
             id="jPassword"
@@ -187,6 +195,7 @@
           >
             進入評分清單系統
           </button>
+          <br />評分截止時間（2026年1月13日 下午 4:00）
         </div>
       </section>
 
@@ -656,9 +665,9 @@
             venueConfig = configDoc.data();
           }
           renderAdminConfigUI();
-          renderVenueSelect();// <--- 加入這行
-    
-    // ... 原本的 snapshot 監聽程式碼 ...
+          renderVenueSelect(); // <--- 加入這行
+
+          // ... 原本的 snapshot 監聽程式碼 ...
 
           db.collection("Students").onSnapshot((snap) => {
             students = snap.docs.map((doc) => doc.data());
@@ -706,11 +715,12 @@
           .join("");
       }
 
-     //評審登入
+      //評審登入
       function judgeLogin() {
         const v = document.getElementById("jVenue").value;
         const n = document.getElementById("jName").value.trim();
-        if (!n || !venueConfig[v].judges.includes(n)) return alert("姓名不在該場地評審名單中");
+        if (!n || !venueConfig[v].judges.includes(n))
+          return alert("姓名不在該場地評審名單中");
         const p = document.getElementById("jPassword").value.trim();
         if (!p) return alert("請輸入密碼");
         let found = null;
@@ -818,25 +828,29 @@
         showSection("scoreSection");
 
         // 檢查時間是否已過
-          const isExpired = new Date().getTime() > DEADLINE;
-          const submitBtn = document.querySelector("button[onclick='submitGradingToCloud()']");
-          const deleteBtn = document.querySelector("button[onclick='deleteGradingFromCloud()']");
+        const isExpired = new Date().getTime() > DEADLINE;
+        const submitBtn = document.querySelector(
+          "button[onclick='submitGradingToCloud()']"
+        );
+        const deleteBtn = document.querySelector(
+          "button[onclick='deleteGradingFromCloud()']"
+        );
 
-          if (isExpired) {
-            submitBtn.classList.add("hidden");
-            deleteBtn.classList.add("hidden");
-            // 可以額外提示
-            document.getElementById("finalScoreDisplay").parentElement.innerHTML += 
-              `<p class="text-red-500 text-sm mt-2">評分已截止，目前僅供檢視</p>`;
-          } else {
-            submitBtn.classList.remove("hidden");
-            deleteBtn.classList.remove("hidden");
-          }
+        if (isExpired) {
+          submitBtn.classList.add("hidden");
+          deleteBtn.classList.add("hidden");
+          // 可以額外提示
+          document.getElementById(
+            "finalScoreDisplay"
+          ).parentElement.innerHTML += `<p class="text-red-500 text-sm mt-2">評分已截止，目前僅供檢視</p>`;
+        } else {
+          submitBtn.classList.remove("hidden");
+          deleteBtn.classList.remove("hidden");
         }
-
+      }
 
       async function deleteGradingFromCloud() {
-	if (!checkDeadline()) return; // 先檢查時間
+        if (!checkDeadline()) return; // 先檢查時間
 
         if (!confirm("確定刪除此生評分紀錄？")) return;
         toggleLoading(true);
@@ -940,7 +954,6 @@
         await db.collection("Settings").doc("VenueConfig").set(venueConfig);
         alert("儲存成功");
       }
-
 
       // 多欄位即時排行榜邏輯
       function renderPublicResults() {
@@ -1176,29 +1189,34 @@
             });
       }
 
-	function renderVenueSelect() {
-	  const select = document.getElementById("jVenue");
-	  if (!select) return;
+      function renderVenueSelect() {
+        const select = document.getElementById("jVenue");
+        if (!select) return;
 
-	  // 遍歷 A1, A2, B1, B2 等場地
-	  select.innerHTML = venues.map(v => {
-	    // 取得該場地設定的教室名稱，若沒填寫則顯示場地編號
-	    const roomName = venueConfig[v] && venueConfig[v].room ? venueConfig[v].room : `未設定教室`;
-	    return `<option value="${v}">${roomName} (${v}場地)</option>`;
-	  }).join("");
-	}
+        // 遍歷 A1, A2, B1, B2 等場地
+        select.innerHTML = venues
+          .map((v) => {
+            // 取得該場地設定的教室名稱，若沒填寫則顯示場地編號
+            const roomName =
+              venueConfig[v] && venueConfig[v].room
+                ? venueConfig[v].room
+                : `未設定教室`;
+            return `<option value="${v}">${roomName} (${v}場地)</option>`;
+          })
+          .join("");
+      }
 
-	// 定義截止時間（例如：2026年1月13日 下午 4:00）
-	const DEADLINE = new Date("2026-01-13T16:00:00").getTime();
+      // 定義截止時間（例如：2026年1月13日 下午 5:00）
+      const DEADLINE = new Date("2026-01-13T17:00:00").getTime();
 
-	function checkDeadline() {
- 	 const now = new Date().getTime();
- 	 if (now > DEADLINE) {
- 	   alert("【系統提示】評分期限已過，無法再新增、修改或刪除評分紀錄。");
- 	   return false;
-	  }
- 	 return true;
-	}
+      function checkDeadline() {
+        const now = new Date().getTime();
+        if (now > DEADLINE) {
+          alert("【系統提示】評分期限已過，無法再新增、修改或刪除評分紀錄。");
+          return false;
+        }
+        return true;
+      }
     </script>
   </body>
 </html>
