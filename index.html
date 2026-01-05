@@ -563,6 +563,43 @@
         </div>
       </section>
 
+
+      <section id="scoreSectionPoster" class="hidden max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-2xl border-t-8 border-green-600">
+        <button onclick="showSection('judgeDashboard')" class="mb-6 text-green-600 font-bold hover:underline">← 返回名單</button>
+  
+        <div class="mb-8 border-b pb-4">
+          <h2 id="scoringNamePoster" class="text-3xl font-black text-slate-800">姓名</h2>
+          <p id="scoringTitlePoster" class="text-slate-500 text-sm mt-1">專題名稱</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 mb-8">
+          <div class="dimension-card" style="border-left-color: #059669">
+            <label class="block text-sm font-bold text-slate-700 mb-2">1. 研究內容 (60%) [包含創意、價值、應用性、理解性]</label>
+            <input type="number" id="p_research" oninput="calcTotalPoster()" class="w-full p-3 text-xl border-2 rounded-xl outline-none focus:border-green-500" placeholder="0-100">
+          </div>
+
+          <div class="dimension-card" style="border-left-color: #10b981">
+            <label class="block text-sm font-bold text-slate-700 mb-2">2. 整體造型 (20%) [包含海報規劃、美觀、色彩]</label>
+            <input type="number" id="p_design" oninput="calcTotalPoster()" class="w-full p-3 text-xl border-2 rounded-xl outline-none focus:border-green-500" placeholder="0-100">
+          </div>
+
+          <div class="dimension-card" style="border-left-color: #34d399">
+            <label class="block text-sm font-bold text-slate-700 mb-2">3. 學生應答表現 (20%) [包含對專題瞭解、表達能力]</label>
+            <input type="number" id="p_qa" oninput="calcTotalPoster()" class="w-full p-3 text-xl border-2 rounded-xl outline-none focus:border-green-500" placeholder="0-100">
+          </div>
+
+          <div class="p-4 bg-slate-100 rounded-xl border">
+            <label class="block text-sm font-bold text-blue-900 mb-2">● 評審總結建議：</label>
+            <textarea id="judgeCommentPoster" class="w-full p-3 text-sm border-2 rounded-xl h-32 outline-none"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col md:flex-row justify-between items-center bg-green-900 text-white p-8 rounded-3xl gap-4">
+          <div>海報競賽加權成績：<span id="finalScorePoster" class="text-6xl font-black text-yellow-400">0</span>分</div>
+          <button onclick="submitPosterScore()" class="bg-green-600 px-12 py-4 rounded-2xl font-black text-xl shadow-xl hover:bg-green-700 transition">送出海報評分</button>
+        </div>
+      </section>
+
       <section
         id="adminDashboard"
         class="hidden bg-white rounded-3xl shadow-xl p-8"
@@ -627,6 +664,7 @@
           </div>
         </div>
       </section>
+
     </main>
 
     <script>
@@ -642,6 +680,7 @@
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
 
+      // 1. 初始化場地清單與配置
       let students = [],
         scores = [],
         currentUser = null,
@@ -651,24 +690,25 @@
         A2: { room: "", judges: ["", ""], passwords: ["", ""] },
         B1: { room: "", judges: ["", ""], passwords: ["", ""] },
         B2: { room: "", judges: ["", ""], passwords: ["", ""] },
+        C1: { room: "", judges: ["", ""], passwords: ["", ""] },
       };
-      const venues = ["A1", "A2", "B1", "B2"];
+      const venues = ["A1", "A2", "B1", "B2", "C1"];
 
-      window.onload = async () => {
+     window.onload = async () => {
         toggleLoading(true);
         try {
-          const configDoc = await db
-            .collection("Settings")
-            .doc("VenueConfig")
-            .get();
+          const configDoc = await db.collection("Settings").doc("VenueConfig").get();
           if (configDoc.exists) {
-            venueConfig = configDoc.data();
+            const cloudData = configDoc.data();
+            // 核心修正：合併雲端資料，確保 C1 不會被刪除
+            venues.forEach(v => {
+              if (cloudData[v]) venueConfig[v] = cloudData[v];
+            });
           }
           renderAdminConfigUI();
-          renderVenueSelect(); // <--- 加入這行
+          renderVenueSelect(); 
 
-          // ... 原本的 snapshot 監聽程式碼 ...
-
+          // 即時監聽
           db.collection("Students").onSnapshot((snap) => {
             students = snap.docs.map((doc) => doc.data());
             renderAdminList();
@@ -687,33 +727,51 @@
         }
       };
 
+      // 修正後台介面生成邏輯
       function renderAdminConfigUI() {
-        document.getElementById("venueConfigContainer").innerHTML = venues
-          .map(
-            (v) => `
+        const container = document.getElementById("venueConfigContainer");
+        container.innerHTML = venues.map(v => `
           <div class="p-5 border rounded-2xl bg-slate-50">
-            <div class="flex gap-2 mb-4"><span class="bg-blue-900 text-white px-3 py-1 rounded font-bold">${v}</span>
-            <input type="text" id="vRoom_${v}" value="${
-              venueConfig[v].room || ""
-            }" placeholder="教室" class="flex-1 border-b bg-transparent outline-none"></div>
-            <div class="grid grid-cols-2 gap-2">
-              <input type="text" id="vJudge_${v}_1" value="${
-              venueConfig[v].judges[0] || ""
-            }" placeholder="評審1姓名" class="p-2 border rounded text-xs">
-              <input type="text" id="vPwd_${v}_1" value="${
-              venueConfig[v].passwords ? venueConfig[v].passwords[0] : ""
-            }" placeholder="密碼1" class="p-2 border rounded text-xs">
-              <input type="text" id="vJudge_${v}_2" value="${
-              venueConfig[v].judges[1] || ""
-            }" placeholder="評審2姓名" class="p-2 border rounded text-xs">
-              <input type="text" id="vPwd_${v}_2" value="${
-              venueConfig[v].passwords ? venueConfig[v].passwords[1] : ""
-            }" placeholder="密碼2" class="p-2 border rounded text-xs">
+            <div class="flex gap-2 mb-4">
+              <span class="bg-blue-900 text-white px-3 py-1 rounded font-bold">${v}</span>
+              <input type="text" id="vRoom_${v}" value="${venueConfig[v].room || ''}" placeholder="教室名稱" class="flex-1 border-b bg-transparent outline-none">
             </div>
-          </div>`
-          )
-          .join("");
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="vJudge_${v}_1" value="${venueConfig[v].judges[0] || ''}" placeholder="評審1姓名" class="p-2 border rounded text-xs">
+              <input type="text" id="vPwd_${v}_1" value="${venueConfig[v].passwords ? venueConfig[v].passwords[0] : ''}" placeholder="密碼1" class="p-2 border rounded text-xs">
+              <input type="text" id="vJudge_${v}_2" value="${venueConfig[v].judges[1] || ''}" placeholder="評審2姓名" class="p-2 border rounded text-xs">
+              <input type="text" id="vPwd_${v}_2" value="${venueConfig[v].passwords ? venueConfig[v].passwords[1] : ''}" placeholder="密碼2" class="p-2 border rounded text-xs">
+            </div>
+          </div>
+        `).join("");
       }
+      
+      // 修正儲存邏輯，確保循環處理 C1
+      async function saveAdminConfig() {
+        toggleLoading(true);
+        try {
+          venues.forEach((v) => {
+            venueConfig[v] = {
+              room: document.getElementById(`vRoom_${v}`).value,
+              judges: [
+                document.getElementById(`vJudge_${v}_1`).value,
+                document.getElementById(`vJudge_${v}_2`).value,
+              ],
+              passwords: [
+                document.getElementById(`vPwd_${v}_1`).value,
+                document.getElementById(`vPwd_${v}_2`).value,
+              ],
+            };
+          });
+          await db.collection("Settings").doc("VenueConfig").set(venueConfig);
+          alert("C1 與所有場地配置已成功儲存！");
+        } catch (e) {
+          alert("儲存失敗");
+        } finally {
+          toggleLoading(false);
+        }
+      }
+
 
       //評審登入
       function judgeLogin() {
@@ -937,23 +995,7 @@
         syncToOverall();
       }
 
-      async function saveAdminConfig() {
-        venues.forEach((v) => {
-          venueConfig[v] = {
-            room: document.getElementById(`vRoom_${v}`).value,
-            judges: [
-              document.getElementById(`vJudge_${v}_1`).value,
-              document.getElementById(`vJudge_${v}_2`).value,
-            ],
-            passwords: [
-              document.getElementById(`vPwd_${v}_1`).value,
-              document.getElementById(`vPwd_${v}_2`).value,
-            ],
-          };
-        });
-        await db.collection("Settings").doc("VenueConfig").set(venueConfig);
-        alert("儲存成功");
-      }
+
 
       // 多欄位即時排行榜邏輯
       function renderPublicResults() {
@@ -1029,28 +1071,34 @@
           .join("");
       }
 
+
+      //增加海報評分按鈕
+      // 修正評分清單顯示：依據場地切換 A1-B2(研討會) 或 C1(海報)
       function renderStudentList() {
         const container = document.getElementById("studentListContainer");
         const filtered = students.filter((s) => s.venue === currentUser.venue);
-        container.innerHTML = filtered
-          .map((s) => {
-            const isDone = scores.some(
-              (sc) => sc.studentId === s.id && sc.judge === currentUser.name
-            );
-            return `<div onclick="openScoring('${
-              s.id
-            }')" class="flex justify-between p-4 border-b hover:bg-slate-50 cursor-pointer">
-            <div><p class="text-[10px] text-slate-400 font-mono">${
-              s.id
-            }</p><h3 class="font-bold">${s.name}</h3></div>
-            ${
-              isDone
-                ? '<span class="checkmark">✔ 已完成</span>'
-                : '<span class="text-xs text-slate-300">尚未評分</span>'
-            }
-          </div>`;
-          })
-          .join("");
+  
+        container.innerHTML = filtered.map((s) => {
+          const isDone = scores.some(sc => sc.studentId === s.id && sc.judge === currentUser.name);
+    
+          // 如果場地是 C1，按鈕變為綠色且指向海報評分頁面
+          let btnHtml = "";
+          if (currentUser.venue === 'C1') {
+            btnHtml = `<button onclick="openPosterScoring('${s.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg text-xs">海報評分</button>`;
+          } else {
+            btnHtml = `<button onclick="openScoring('${s.id}')" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs">進入評分</button>`;
+          }
+
+          return `
+            <div class="flex justify-between items-center p-4 border-b hover:bg-slate-50">
+              <div>
+                <p class="text-[10px] text-slate-400 font-mono">${s.id}</p>
+                <h3 class="font-bold">${s.name}</h3>
+                ${isDone ? '<span class="text-[10px] text-green-600 font-bold">● 已完成</span>' : ''}
+              </div>
+              ${btnHtml}
+            </div>`;
+        }).join("");
       }
 
       function renderAdminList() {
@@ -1206,8 +1254,62 @@
           .join("");
       }
 
-      // 定義截止時間（例如：2026年1月13日 下午 5:00）
-      const DEADLINE = new Date("2026-01-13T17:00:00").getTime();
+
+      // 計算海報競賽分數：研究(60%) + 造型(20%) + 應答(20%)
+      function calcTotalPoster() {
+        const r = parseFloat(document.getElementById("p_research").value) || 0;
+        const d = parseFloat(document.getElementById("p_design").value) || 0;
+        const q = parseFloat(document.getElementById("p_qa").value) || 0;
+  
+        // 根據 PDF 規定計算加權平均 [cite: 13, 27]
+        const total = Math.round(r * 0.6 + d * 0.2 + q * 0.2);
+        document.getElementById("finalScorePoster").innerText = total;
+      }
+
+      // 開啟海報評分介面 (可修改原本的 openScoring 邏輯來決定導向哪一頁)
+      function openPosterScoring(sid) {
+        activeStudent = students.find((s) => s.id === sid);
+        document.getElementById("scoringNamePoster").innerText = activeStudent.name;
+        document.getElementById("scoringTitlePoster").innerText = activeStudent.title || "無題目";
+  
+        // 清空與重置
+        ["p_research", "p_design", "p_qa", "judgeCommentPoster"].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("finalScorePoster").innerText = "0";
+  
+        showSection("scoreSectionPoster");
+      }
+
+      // 送出海報評定至 Firebase
+      async function submitPosterScore() {
+        if (!checkDeadline()) return;
+
+        const r = document.getElementById("p_research").value;
+        const d = document.getElementById("p_design").value;
+        const q = document.getElementById("p_qa").value;
+  
+        if (r === "" || d === "" || q === "") return alert("請完整填寫三項評分");
+
+        toggleLoading(true);
+        try {
+          await db.collection("Scores").doc(`Poster_${currentUser.name}_${activeStudent.id}`).set({
+            type: "PosterCompetition", // 標記為海報競賽
+            judge: currentUser.name,
+            studentId: activeStudent.id,
+            studentName: activeStudent.name,
+            total: parseInt(document.getElementById("finalScorePoster").innerText),
+            rawScores: { research: parseInt(r), design: parseInt(d), qa: parseInt(q) },
+            feedback: document.getElementById("judgeCommentPoster").value,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          alert("海報競賽評分成功！");
+          showSection("judgeDashboard");
+        } finally {
+          toggleLoading(false);
+        }
+      }
+
+      // 定義截止時間（例如：2026年1月13日 下午 4:00）
+      const DEADLINE = new Date("2026-01-13T16:00:00").getTime();
 
       function checkDeadline() {
         const now = new Date().getTime();
