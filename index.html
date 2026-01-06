@@ -998,8 +998,7 @@
       }
 
 
-
-      // 多欄位即時排行榜邏輯
+      // 多欄位即時排行榜邏輯 (優化版)
       function renderPublicResults() {
         const container = document.getElementById("publicRankContainer");
         container.innerHTML = venues
@@ -1009,26 +1008,40 @@
             const vScores = scores.filter((s) => s.venue === v);
 
             const grouped = {};
+      
+            // 1. 分組並填入分數（確保同一評審重複送出時是覆蓋而非累加）
             vScores.forEach((s) => {
-              if (!grouped[s.studentId])
+              if (!grouped[s.studentId]) {
                 grouped[s.studentId] = {
                   name: s.studentName,
-                  j1: "--",
-                  j2: "--",
-                  avg: 0,
-                  sum: 0,
-                  count: 0,
+                  j1: null,
+                  j2: null
                 };
+              }
+              // 判斷是哪位評審的分數
               if (s.judge === judges[0]) grouped[s.studentId].j1 = s.total;
               else if (s.judge === judges[1]) grouped[s.studentId].j2 = s.total;
-              grouped[s.studentId].sum += s.total;
-              grouped[s.studentId].count++;
-              grouped[s.studentId].avg = Math.round(
-                grouped[s.studentId].sum / grouped[s.studentId].count
-              );
             });
-            const rank = Object.values(grouped).sort((a, b) => b.avg - a.avg);
 
+            // 2. 計算平均並轉為陣列
+            const rank = Object.values(grouped).map(item => {
+              const validScores = [item.j1, item.j2].filter(score => score !== null);
+              const sum = validScores.reduce((a, b) => a + b, 0);
+              const count = validScores.length;
+        
+              return {
+                ...item,
+                // 保留一位小數，若無分數則為 0
+                avg: count > 0 ? (sum / count).toFixed(1) : "0.0",
+                displayJ1: item.j1 ?? "--",
+                displayJ2: item.j2 ?? "--"
+              };
+            });
+
+            // 3. 排序 (由高到低)
+            rank.sort((a, b) => parseFloat(b.avg) - parseFloat(a.avg));
+
+            // 4. 生成 HTML (這部分維持你原本的 Tailwind 樣式)
             return `
             <div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900">
               <h3 class="font-black text-xl mb-4 border-b pb-2 flex justify-between">
@@ -1044,27 +1057,13 @@
                 </div>
                 ${
                   rank.length
-                    ? rank
-                        .map(
-                          (r, i) => `
-                  <div class="grid grid-cols-5 items-center text-sm p-2 ${
-                    i === 0 ? "bg-yellow-50 rounded-lg" : ""
-                  }">
-                    <div class="col-span-2 font-bold text-slate-700">${
-                      i + 1
-                    }. ${r.name}</div>
-                    <div class="text-center font-mono text-xs text-slate-400">${
-                      r.j1
-                    }</div>
-                    <div class="text-center font-mono text-xs text-slate-400">${
-                      r.j2
-                    }</div>
-                    <div class="text-right font-black ${
-                      i === 0 ? "text-blue-700" : "text-slate-600"
-                    }">${r.avg}</div>
-                  </div>`
-                        )
-                        .join("")
+                    ? rank.map((r, i) => `
+                  <div class="grid grid-cols-5 items-center text-sm p-2 ${i === 0 ? "bg-yellow-50 rounded-lg" : ""}">
+                    <div class="col-span-2 font-bold text-slate-700">${i + 1}. ${r.name}</div>
+                    <div class="text-center font-mono text-xs text-slate-400">${r.displayJ1}</div>
+                    <div class="text-center font-mono text-xs text-slate-400">${r.displayJ2}</div>
+                    <div class="text-right font-black ${i === 0 ? "text-blue-700" : "text-slate-600"}">${r.avg}</div>
+                  </div>`).join("")
                     : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
                 }
               </div>
@@ -1072,7 +1071,6 @@
           })
           .join("");
       }
-
 
       //增加海報評分按鈕
       // 修正評分清單顯示：依據場地切換 A1-B2(研討會) 或 C1(海報)
