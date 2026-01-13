@@ -1060,9 +1060,9 @@
                     ? rank.map((r, i) => `
                   <div class="grid grid-cols-5 items-center text-sm p-2 ${i === 0 ? "bg-yellow-50 rounded-lg" : ""}">
                     <div class="col-span-2 font-bold text-slate-700">${i + 1}. ${r.name}</div>
-                    <div class="text-center font-mono text-xs text-slate-400">${r.displayJ1}</div>
-                    <div class="text-center font-mono text-xs text-slate-400">${r.displayJ2}</div>
-                    <div class="text-right font-black ${i === 0 ? "text-blue-700" : "text-slate-600"}">${r.avg}</div>
+                    <div class="text-center font-mono text-xs text-slate-400">取消顯示</div>
+                    <div class="text-center font-mono text-xs text-slate-400">取消顯示</div>
+                    <div class="text-right font-black ${i === 0 ? "text-blue-700" : "text-slate-600"}">取消顯示</div>
                   </div>`).join("")
                     : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
                 }
