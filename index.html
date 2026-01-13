@@ -128,7 +128,7 @@
         <h2 class="text-3xl font-black text-center text-blue-900 my-8 italic">
           各場地即時成績看板 (非正式最後成績,參考用)1/13啟用
         </h2>
-        <p class="text-xs text-orange-800 font-bold">評審於當天16:00前可修改線上評分(部分委員採紙本評分,隔天上傳)</p>      
+        <p class="text-xs text-orange-800 font-bold">評審於隔天21:00前可修改線上評分(部分委員採紙本評分,隔天上傳)</p>      
         <div
           id="publicRankContainer"
           class="grid grid-cols-1 md:grid-cols-2 gap-8"
@@ -142,7 +142,7 @@
         <h2 class="text-2xl font-black mb-6 text-center text-slate-800">
           成績與評語查詢
         </h2>
-        <p class="text-xs text-orange-800 font-bold">評審於當天16:00前可修改評分(部分委員採紙本評分,隔天上傳)</p>      
+        <p class="text-xs text-orange-800 font-bold">評審於隔天21:00前可修改評分(部分委員採紙本評分,隔天上傳)</p>      
         <div class="space-y-4">
           <input
             type="text"
@@ -197,7 +197,7 @@
           >
             進入評分清單系統
           </button>
-          <br />評分截止時間（2026年1月13日 下午 4:00）
+          <br />評分截止時間（2026年1月14日 21:00）
         </div>
       </section>
 
@@ -638,7 +638,7 @@
               onclick="exportAllScores()"
               class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold"
             >
-              📊 匯生成績 Excel(當天下午16:00後)
+              📊 匯生成績 Excel
             </button>
           </div>
         </div>
@@ -687,6 +687,7 @@
         scores = [],
         currentUser = null,
         activeStudent = null;
+        isAdminAuthenticated = false; // <-- 新增這一行，用來記住管理員身分
       let venueConfig = {
         A1: { room: "", judges: ["", ""], passwords: ["", ""] },
         A2: { room: "", judges: ["", ""], passwords: ["", ""] },
@@ -997,80 +998,112 @@
         syncToOverall();
       }
 
+ // 多欄位即時排行榜邏輯 (新增同分比序：總分 > 專業分 > 學號)
+function renderPublicResults() {
+  const container = document.getElementById("publicRankContainer");
+  
+  // 使用全域變數判斷管理員身分
+  const isAdmin = isAdminAuthenticated; 
 
-      // 多欄位即時排行榜邏輯 (優化版)
-      function renderPublicResults() {
-        const container = document.getElementById("publicRankContainer");
-        container.innerHTML = venues
-          .map((v) => {
-            const room = venueConfig[v]?.room || "未設定";
-            const judges = venueConfig[v]?.judges || ["評審1", "評審2"];
-            const vScores = scores.filter((s) => s.venue === v);
+  container.innerHTML = venues
+    .map((v) => {
+      const room = venueConfig[v]?.room || "未設定";
+      // 篩選該場地資料（包含 A1-B2 研討會與 C1 海報）
+      const vScores = scores.filter((s) => s.venue === v || (v === 'C1' && s.type === "PosterCompetition"));
 
-            const grouped = {};
+      const grouped = {};
       
-            // 1. 分組並填入分數（確保同一評審重複送出時是覆蓋而非累加）
-            vScores.forEach((s) => {
-              if (!grouped[s.studentId]) {
-                grouped[s.studentId] = {
-                  name: s.studentName,
-                  j1: null,
-                  j2: null
-                };
-              }
-              // 判斷是哪位評審的分數
-              if (s.judge === judges[0]) grouped[s.studentId].j1 = s.total;
-              else if (s.judge === judges[1]) grouped[s.studentId].j2 = s.total;
-            });
-
-            // 2. 計算平均並轉為陣列
-            const rank = Object.values(grouped).map(item => {
-              const validScores = [item.j1, item.j2].filter(score => score !== null);
-              const sum = validScores.reduce((a, b) => a + b, 0);
-              const count = validScores.length;
+      // 1. 彙整分數：同時記錄總分與專業分
+      vScores.forEach((s) => {
+        if (!grouped[s.studentId]) {
+          grouped[s.studentId] = {
+            id: s.studentId,
+            name: s.studentName,
+            details: [], 
+            totalSum: 0,
+            profSum: 0 // 用於比序
+          };
+        }
+        // 取得專業原始分 (研討會: profRaw, 海報: research)
+        const profScore = s.profRaw || (s.rawScores ? s.rawScores.research : 0);
         
-              return {
-                ...item,
-                // 保留一位小數，若無分數則為 0
-                avg: count > 0 ? (sum / count).toFixed(1) : "0.0",
-                displayJ1: item.j1 ?? "--",
-                displayJ2: item.j2 ?? "--"
-              };
-            });
+        grouped[s.studentId].details.push({
+          judge: s.judge,
+          score: s.total
+        });
+        grouped[s.studentId].totalSum += s.total;
+        grouped[s.studentId].profSum += profScore;
+      });
 
-            // 3. 排序 (由高到低)
-            rank.sort((a, b) => parseFloat(b.avg) - parseFloat(a.avg));
+      // 2. 計算平均值
+      const rank = Object.values(grouped).map(item => {
+        const count = item.details.length;
+        const avg = (item.totalSum / count).toFixed(1);
+        const profAvg = (item.profSum / count).toFixed(1);
+        return {
+          ...item,
+          avg: parseFloat(avg),
+          profAvg: parseFloat(profAvg), // 存入專業平均分
+          count: count
+        };
+      });
 
-            // 4. 生成 HTML (這部分維持你原本的 Tailwind 樣式)
-            return `
-            <div class="bg-white p-6 rounded-3xl shadow border-t-8 border-blue-900">
-              <h3 class="font-black text-xl mb-4 border-b pb-2 flex justify-between">
-                <span>${v} 場地 (${room})</span>
-                <span class="text-xs text-blue-500 animate-pulse">Live</span>
-              </h3>
-              <div class="space-y-3">
-                <div class="grid grid-cols-5 text-[10px] text-slate-400 font-bold px-2">
-                  <div class="col-span-2">學生姓名</div>
-                  <div class="text-center">評審1</div>
-                  <div class="text-center">評審2</div>
-                  <div class="text-right">平均</div>
+      // 3. 排序邏輯 (同分比序)
+      rank.sort((a, b) => {
+        // 第一順位：平均總分 (由高到低)
+        if (b.avg !== a.avg) return b.avg - a.avg;
+        
+        // 第二順位：專業分平均 (由高到低)
+        if (b.profAvg !== a.profAvg) return b.profAvg - a.profAvg;
+        
+        // 第三順位：學號 (由小到大，確保排序穩定)
+        return a.id > b.id ? 1 : -1;
+      });
+
+      return `
+      <div class="bg-white p-6 rounded-3xl shadow border-t-8 ${v === 'C1' ? 'border-green-600' : 'border-blue-900'}">
+        <h3 class="font-black text-xl mb-4 border-b pb-2 flex justify-between">
+          <span>${v} ${v === 'C1' ? '海報競賽' : '專題研討'} (${room})</span>
+          <span class="text-xs text-blue-500 animate-pulse">Live</span>
+        </h3>
+        <div class="space-y-3">
+          <div class="grid grid-cols-5 text-[10px] text-slate-400 font-bold px-2">
+            <div class="col-span-2">學生姓名 / 評審給分</div>
+            <div class="text-center">評審人數</div>
+            <div class="text-right col-span-2">平均總分</div>
+          </div>
+          ${
+            rank.length
+              ? rank.map((r, i) => `
+            <div class="grid grid-cols-5 items-center text-sm p-2 border-b border-slate-50">
+              <div class="col-span-2">
+                <div class="font-bold text-slate-700">${i + 1}. ${r.name}</div>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  ${r.details.map(d => `
+                    <span class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+                      ${d.judge}: ${isAdmin ? d.score : '✓'}
+                    </span>
+                  `).join("")}
                 </div>
-                ${
-                  rank.length
-                    ? rank.map((r, i) => `
-                  <div class="grid grid-cols-5 items-center text-sm p-2 ${i === 0 ? "bg-yellow-50 rounded-lg" : ""}">
-                    <div class="col-span-2 font-bold text-slate-700">${i + 1}. ${r.name}</div>
-                    <div class="text-center font-mono text-xs text-slate-400">取消顯示</div>
-                    <div class="text-center font-mono text-xs text-slate-400">取消顯示</div>
-                    <div class="text-right font-black ${i === 0 ? "text-blue-700" : "text-slate-600"}">取消顯示</div>
-                  </div>`).join("")
-                    : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
-                }
               </div>
-            </div>`;
-          })
-          .join("");
-      }
+              <div class="text-center font-mono text-xs text-slate-500">${r.count} 位</div>
+              <div class="text-right col-span-2 font-black text-blue-900">
+                <span class="text-2xl">${isAdmin ? r.avg : '已記錄'}</span>
+                ${isAdmin ? '<span class="text-[10px] text-slate-400 font-normal"> 分</span>' : ''}
+                ${isAdmin && rank.some((other, idx) => other.avg === r.avg && idx !== i) 
+                  ? `<div class="text-[9px] text-orange-500 font-normal">專業Avg: ${r.profAvg}</div>` 
+                  : ''}
+              </div>
+            </div>`).join("")
+              : '<p class="text-xs text-slate-300 text-center py-4">⏳ 等待評分中...</p>'
+          }
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+
 
       //增加海報評分按鈕
       // 修正評分清單顯示：依據場地切換 A1-B2(研討會) 或 C1(海報)
@@ -1254,8 +1287,11 @@
         document.getElementById("loading").classList.toggle("hidden", !s);
       }
       function enterAdmin() {
-        if (prompt("請輸入管理密碼,提示t~4") === "tedx2614")
+        if (prompt("請輸入管理密碼,提示t~4") === "tedx2614"){
+          isAdminAuthenticated = true; // 標記為已認證
           showSection("adminDashboard");
+          renderPublicResults(); // 密碼正確後立即更新一次排行榜顯示邏輯
+        }
       }
       function clearStudentsCloud() {
         if (confirm("確定清空？"))
@@ -1335,8 +1371,8 @@
         }
       }
 
-      // 定義截止時間（例如：2026年1月13日 下午 9:00）
-      const DEADLINE = new Date("2026-01-13T21:00:00").getTime();
+      // 定義截止時間（例如：2026年1月14日 下午 9:00）
+      const DEADLINE = new Date("2026-01-14T21:00:00").getTime();
 
       function checkDeadline() {
         const now = new Date().getTime();
@@ -1345,6 +1381,49 @@
           return false;
         }
         return true;
+      }
+
+      // === 海報評分送出功能 (修正版) ===
+      async function submitPosterScore() {
+        if (!checkDeadline()) return; // 檢查 21:00 截止時間
+
+        const r = document.getElementById("p_research").value;
+        const d = document.getElementById("p_design").value;
+        const q = document.getElementById("p_qa").value;
+        const total = document.getElementById("finalScorePoster").innerText;
+        const comment = document.getElementById("judgeCommentPoster").value;
+  
+        if (r === "" || d === "" || q === "") {
+          alert("請完整填寫三項評分");
+          return;
+        }
+
+        toggleLoading(true);
+        try {
+          if (!currentUser || !activeStudent) {
+             throw new Error("找不到登入資訊或學生資訊");
+          }
+
+          await db.collection("Scores").doc(`Poster_${currentUser.name}_${activeStudent.id}`).set({
+            type: "PosterCompetition", 
+            judge: currentUser.name,
+            venue: currentUser.venue,
+            studentId: activeStudent.id,
+            studentName: activeStudent.name,
+            total: parseInt(total),
+            rawScores: { research: parseInt(r), design: parseInt(d), qa: parseInt(q) },
+            feedback: comment,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          
+          alert("海報競賽評分成功！");
+          showSection("judgeDashboard"); // 回到清單
+        } catch (error) {
+          console.error("錯誤:", error);
+          alert("儲存失敗: " + error.message);
+        } finally {
+          toggleLoading(false);
+        }
       }
     </script>
   </body>
