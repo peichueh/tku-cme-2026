@@ -1303,39 +1303,35 @@
         document.getElementById("scoringNamePoster").innerText = activeStudent.name;
         document.getElementById("scoringTitlePoster").innerText = activeStudent.title || "無題目";
   
-        // 清空與重置
+        // 1. 先清空/重置所有欄位
         ["p_research", "p_design", "p_qa", "judgeCommentPoster"].forEach(id => document.getElementById(id).value = "");
         document.getElementById("finalScorePoster").innerText = "0";
+
+        // 2. 從目前的 scores 陣列中找找看有沒有這位評審對這位同學的「海報紀錄」
+        // 注意：海報的 doc ID 格式是 Poster_評審姓名_學號
+        const history = scores.find(
+          (sc) => sc.studentId === sid && sc.judge === currentUser.name && sc.type === "PosterCompetition"
+        );
+
+        // 3. 如果有歷史紀錄，就填回去
+        if (history && history.rawScores) {
+          document.getElementById("p_research").value = history.rawScores.research || "";
+          document.getElementById("p_design").value = history.rawScores.design || "";
+          document.getElementById("p_qa").value = history.rawScores.qa || "";
+          document.getElementById("judgeCommentPoster").value = history.feedback || "";
+          document.getElementById("finalScorePoster").innerText = history.total || "0";
+        }
   
         showSection("scoreSectionPoster");
-      }
 
-      // 送出海報評定至 Firebase
-      async function submitPosterScore() {
-        if (!checkDeadline()) return;
-
-        const r = document.getElementById("p_research").value;
-        const d = document.getElementById("p_design").value;
-        const q = document.getElementById("p_qa").value;
-  
-        if (r === "" || d === "" || q === "") return alert("請完整填寫三項評分");
-
-        toggleLoading(true);
-        try {
-          await db.collection("Scores").doc(`Poster_${currentUser.name}_${activeStudent.id}`).set({
-            type: "PosterCompetition", // 標記為海報競賽
-            judge: currentUser.name,
-            studentId: activeStudent.id,
-            studentName: activeStudent.name,
-            total: parseInt(document.getElementById("finalScorePoster").innerText),
-            rawScores: { research: parseInt(r), design: parseInt(d), qa: parseInt(q) },
-            feedback: document.getElementById("judgeCommentPoster").value,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          });
-          alert("海報競賽評分成功！");
-          showSection("judgeDashboard");
-        } finally {
-          toggleLoading(false);
+        // 4. 截止時間檢查 (與研討會邏輯一致)
+        const isExpired = new Date().getTime() > DEADLINE;
+        const submitBtn = document.querySelector("button[onclick='submitPosterScore()']");
+        if (isExpired) {
+          submitBtn.classList.add("hidden");
+          document.getElementById("finalScorePoster").parentElement.innerHTML += `<p class="text-red-500 text-sm mt-2">評分已截止</p>`;
+        } else {
+          submitBtn.classList.remove("hidden");
         }
       }
 
