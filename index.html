@@ -1185,21 +1185,52 @@
         reader.readAsArrayBuffer(input.files[0]);
       }
 
+
       function exportAllScores() {
-        const data = scores.map((s) => ({
-          場地: s.venue,
-          評審: s.judge,
-          學生: s.studentName,
-          學號: s.studentId,
-          專業分: s.profRaw,
-          技術分: s.techRaw,
-          加權總分: s.total,
-          評語: s.feedback_json.summary,
-        }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Scores");
-        XLSX.writeFile(wb, `成績匯出_${new Date().toLocaleDateString()}.xlsx`);
+        if (!scores || scores.length === 0) {
+          alert("目前資料庫中尚無評分紀錄可供匯出。");
+          return;
+        }
+
+        const data = scores.map((s) => {
+          // 1. 安全取得評語 (相容研討會與海報兩種格式)
+          let comment = "";
+          if (s.feedback_json && s.feedback_json.summary) {
+            comment = s.feedback_json.summary;
+          } else if (s.feedback) {
+            comment = s.feedback;
+          }
+
+          // 2. 判斷分數類型並對齊欄位
+          const isPoster = s.type === "PosterCompetition";
+          
+          return {
+            "場地編號": s.venue || (isPoster ? "C1" : "未分類"),
+            "評分項目": isPoster ? "海報競賽" : "專題研討",
+            "評審姓名": s.judge,
+            "學生姓名": s.studentName,
+            "學號": s.studentId,
+            "原始分A(專業/研究)": isPoster ? (s.rawScores?.research || 0) : (s.profRaw || 0),
+            "原始分B(技術/造型)": isPoster ? (s.rawScores?.design || 0) : (s.techRaw || 0),
+            "原始分C(應答)": isPoster ? (s.rawScores?.qa || 0) : "--",
+            "加權總分": s.total,
+            "委員評語": comment,
+            "提交時間": s.timestamp ? new Date(s.timestamp.seconds * 1000).toLocaleString() : "手動上傳"
+          };
+        });
+
+        try {
+          const ws = XLSX.utils.json_to_sheet(data);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "評分彙整表");
+          
+          // 檔名加入時間戳記防止覆蓋
+          const fileName = `淡江化工研討會成績_${new Date().getHours()}點${new Date().getMinutes()}分.xlsx`;
+          XLSX.writeFile(wb, fileName);
+        } catch (error) {
+          console.error("匯出過程出錯:", error);
+          alert("匯出失敗！錯誤訊息：" + error.message);
+        }
       }
 
       function toggleAdminTab(t) {
